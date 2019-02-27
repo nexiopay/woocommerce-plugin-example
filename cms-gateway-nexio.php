@@ -35,7 +35,6 @@ function woocommerce_nexio_missing_wc_notice() {
 add_action( 'plugins_loaded', 'woocommerce_gateway_nexio_init' );
 
 function woocommerce_gateway_nexio_init() {
-	//load_plugin_textdomain( 'cms-gateway-nexio', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
 
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', 'woocommerce_nexio_missing_wc_notice' );
@@ -50,9 +49,7 @@ function woocommerce_gateway_nexio_init() {
 		define( 'CMS_NEXIO_MIN_PHP_VER', '5.6.0' );
 		define( 'CMS_NEXIO_MIN_WC_VER', '2.6.0' );
 		define( 'CMS_NEXIO_MAIN_FILE', __FILE__ );
-		//define( 'WC_NEXIO_PLUGIN_URL', untrailingslashit( plugins_url( basename( plugin_dir_path( __FILE__ ) ), basename( __FILE__ ) ) ) );
-		//define( 'WC_NEXIO_PLUGIN_PATH', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
-
+		
 		class CMS_Nexio {
 
 			/**
@@ -108,45 +105,8 @@ function woocommerce_gateway_nexio_init() {
 					require_once dirname( __FILE__ ) . '/class-cms-nexio-privacy.php';
 				}
 				require_once dirname( __FILE__ ) . '/class-cms-gateway-nexio.php';
-				/*
-				
 
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-exception.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-logger.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-helper.php';
-				include_once dirname( __FILE__ ) . '/includes/class-wc-nexio-api.php';
-				
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-webhook-handler.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-sepa-payment-token.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-apple-pay-registration.php';
-				require_once dirname( __FILE__ ) . '/includes/compat/class-wc-nexio-pre-orders-compat.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-gateway-nexio.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-bancontact.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-sofort.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-giropay.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-eps.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-ideal.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-p24.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-alipay.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-sepa.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-gateway-nexio-multibanco.php';
-				require_once dirname( __FILE__ ) . '/includes/payment-methods/class-wc-nexio-payment-request.php';
-				require_once dirname( __FILE__ ) . '/includes/compat/class-wc-nexio-subs-compat.php';
-				require_once dirname( __FILE__ ) . '/includes/compat/class-wc-nexio-sepa-subs-compat.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-order-handler.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-payment-tokens.php';
-				require_once dirname( __FILE__ ) . '/includes/class-wc-nexio-customer.php';
-
-				if ( is_admin() ) {
-					require_once dirname( __FILE__ ) . '/includes/admin/class-wc-nexio-admin-notices.php';
-				}
-				*/
-
-
-				add_filter( 'woocommerce_payment_gateways', array($this,'add_gateways') );
-				//add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'plugin_action_links' ) );
-
-				
+				add_filter( 'woocommerce_payment_gateways', array($this,'add_gateways') );				
 			}
 
 			/**
@@ -183,23 +143,6 @@ function woocommerce_gateway_nexio_init() {
 			}
 
 			/**
-			 * Adds plugin action links.
-			 *
-			 * @since 1.0.0
-			 * @version 4.0.0
-			 */
-			/*
-			public function plugin_action_links( $links ) {
-				$plugin_links = array(
-					'<a href="admin.php?page=wc-settings&tab=checkout&section=stripe">' . esc_html__( 'Settings', 'cms-gateway-nexio' ) . '</a>',
-					'<a href="https://docs.woocommerce.com/document/stripe/">' . esc_html__( 'Docs', 'cms-gateway-nexio' ) . '</a>',
-					'<a href="https://woocommerce.com/contact-us/">' . esc_html__( 'Support', 'cms-gateway-nexio' ) . '</a>',
-				);
-				return array_merge( $plugin_links, $links );
-			}
-			*/
-
-			/**
 			 * Add the gateways to WooCommerce.
 			 *
 			 * @since 1.0.0
@@ -212,40 +155,6 @@ function woocommerce_gateway_nexio_init() {
 				return $methods;
 			}
 
-			
-			/**
-			 * Modifies the order of the gateways displayed in admin.
-			 *
-			 * @since 4.0.0
-			 * @version 4.0.0
-			 */
-			/*
-			public function filter_gateway_order_admin( $sections ) {
-				unset( $sections['stripe'] );
-				unset( $sections['stripe_bancontact'] );
-				unset( $sections['stripe_sofort'] );
-				unset( $sections['stripe_giropay'] );
-				unset( $sections['stripe_eps'] );
-				unset( $sections['stripe_ideal'] );
-				unset( $sections['stripe_p24'] );
-				unset( $sections['stripe_alipay'] );
-				unset( $sections['stripe_sepa'] );
-				unset( $sections['stripe_multibanco'] );
-
-				$sections['stripe']            = 'Stripe';
-				$sections['stripe_bancontact'] = __( 'Stripe Bancontact', 'cms-gateway-nexio' );
-				$sections['stripe_sofort']     = __( 'Stripe SOFORT', 'cms-gateway-nexio' );
-				$sections['stripe_giropay']    = __( 'Stripe Giropay', 'cms-gateway-nexio' );
-				$sections['stripe_eps']        = __( 'Stripe EPS', 'cms-gateway-nexio' );
-				$sections['stripe_ideal']      = __( 'Stripe iDeal', 'cms-gateway-nexio' );
-				$sections['stripe_p24']        = __( 'Stripe P24', 'cms-gateway-nexio' );
-				$sections['stripe_alipay']     = __( 'Stripe Alipay', 'cms-gateway-nexio' );
-				$sections['stripe_sepa']       = __( 'Stripe SEPA Direct Debit', 'cms-gateway-nexio' );
-				$sections['stripe_multibanco'] = __( 'Stripe Multibanco', 'cms-gateway-nexio' );
-
-				return $sections;
-			}
-			*/
 		}
 
 		CMS_Nexio::get_instance();
