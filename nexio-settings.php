@@ -51,5 +51,13 @@ return apply_filters(
 			'default'     => '',
 			'desc_tip'    => true,
 		),
+		'css'                       	=> array(
+			'title'       => __( 'CSS', 'cms-gateway-nexio' ),
+			'label'       => __( 'CSS file location', 'cms-gateway-nexio' ),
+			'type'        => 'text',
+			'description' => __( 'CSS file location', 'cms-gateway-nexio' ),
+			'default'     => 'https://tester.nexiopaydev.com/example.css',
+			'desc_tip'    => true,
+		),
 	)
 );

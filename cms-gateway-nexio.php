@@ -1,15 +1,14 @@
 <?php
 /**
- * Plugin Name: CMS Nexio Gateway
- * Plugin URI: https://wordpress.org/plugins/cms-gateway-nexio/
+ * Plugin Name: Nexio
  * Description: Take credit card payments on your store using Nexio.
  * Author: Complete Merchant Solutions
  * Author URI: https://www.cmsonline.com/
- * Version: 0.0.01
+ * Version: 0.0.02
  * Requires at least: 4.4
  * Tested up to: 5.0
  * WC requires at least: 2.6
- * WC tested up to: 3.5
+ * WC tested up to: 5.1
  * Text Domain: cms-gateway-nexio
  * Domain Path: /languages
  *
@@ -45,7 +44,7 @@ function woocommerce_gateway_nexio_init() {
 		/**
 		 * Required minimums and constants
 		 */
-		define( 'CMS_NEXIO_VERSION', '0.0.01' );
+		define( 'CMS_NEXIO_VERSION', '0.0.02' );
 		define( 'CMS_NEXIO_MIN_PHP_VER', '5.6.0' );
 		define( 'CMS_NEXIO_MIN_WC_VER', '2.6.0' );
 		define( 'CMS_NEXIO_MAIN_FILE', __FILE__ );

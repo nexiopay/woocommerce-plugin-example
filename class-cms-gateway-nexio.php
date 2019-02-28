@@ -38,11 +38,18 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public $password;		
 
 	/**
+	 * CSS
+	 *
+	 * @var string
+	 */
+	public $css;	
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->id             = 'nexio';
-		$this->method_title   = __( 'Nexio Credit Card', 'cms-gateway-nexio' );
+		$this->method_title   = __( 'Nexio', 'cms-gateway-nexio' );
 		/* translators: 1) link to nexio register page 2) link to nexio api keys page */
 		$this->method_description = sprintf( __( 'Nexio works by adding payment fields on the checkout and then sending the details to Nexio for verification. <a href="%1$s" target="_blank">Connect us</a> for a Nexio account, and get your Nexio account token</a>.', 'cms-gateway-nexio' ), 'https://nexiopay.com/contact/');
 		$this->has_fields         = false;
@@ -60,30 +67,33 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->api_url		= $this->get_option('api_url');
 		$this->user_name	= $this->get_option('user_name');
 		$this->password	= $this->get_option('password');
+		$this->css = trim($this->get_option('css'));
 		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
 		
 
 		// Hooks.
-		add_action( 'init', array( $this, 'nexio_checkout_return_handler' ) );
-		add_action( 'woocommerce_api_woocommerce_nexio', array( $this, 'successful_request' ) );
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'woocommerce_receipt_nexio', array( $this, 'receipt_page' ) );
 		add_action( 'woocommerce_api_' . strtolower( get_class( $this ) ), array( $this, 'nexio_checkout_return_handler' ) );
 		add_action( 'woocommerce_api_callback', array( $this, 'nexio_checkout_return_failure_handler' ) );
+		add_action( 'woocommerce_thankyou_nexio', array( $this,'custom_content_thankyou'), 10,1);
 	}
 	
-	
 	/**
-	 * Checks if gateway should be available to use.
+	 * Show customized message in order received page after payment success.
 	 *
 	 * @since 0.0.1
 	 */
-	public function is_available() {
-		if ( is_add_payment_method_page() && ! $this->saved_cards ) {
-			return false;
-		}
+	function custom_content_thankyou($order_id) {
+		$order = wc_get_order($order_id); 
 
-		return parent::is_available();
+    	$paymethod = $order->payment_method_title;
+		$orderstat = $order->get_status();
+		if($orderstat == 'processing')
+			echo '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
+		else
+			echo '<p>'.__('Payment is successfully processed by Nexio, but your order status is not processing, please check!').'</p>';
+		//wc_add_notice( __('Successfully Processed Credit Card Transaction.'), 'notice' );
 	}
 
 	/**
@@ -97,6 +107,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		echo wpautop(wptexturize('Please click below button to continue payment'));
 	}
 
+	/**
+	 * payment_scripts function.
+	 *
+	 * @since 0.0.1
+	 * @version 1.0.0
+	 * @return null
+	 */
 	public function payment_scripts() {
 		
 	}
@@ -106,6 +123,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * @since 1.0.0
 	 * @version 4.0.0
 	 * @return string
+	 * for later use
 	 */
 	/*
 	public function get_icon() {
@@ -141,15 +159,16 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function nexio_checkout_return_handler() {
 		error_log('CALLBACK WORKS!!!!!',0);
+		
+		
 		$data = file_get_contents('php://input');
 		error_log('data:'.$data);
 		$callbackdata = json_decode($data);
-		//error_log('callback data:'.json_encode($callbackdata->data));
+		
 		if(isset($callbackdata->data) && !empty($callbackdata->data) &&
 		   isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
 		   isset($callbackdata->data->customer->orderNumber) && !empty($callbackdata->data->customer->orderNumber))
 		{
-			error_log("HEY!!!!it's the condition");
 			try
 			{
 				$order_id = $callbackdata->data->customer->orderNumber;
@@ -157,21 +176,22 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				error_log('ORDER Number:'.$order_id);
 				
 				$order    = wc_get_order( $order_id );
+				
 				// Remove cart.
 				$order->add_order_note(sprintf(__('Nexio Payment Completed.', 'cms-gateway-nexio')));
 				$order->payment_complete();
-				//WC()->cart->empty_cart();
-				
-				wp_redirect(get_permalink($this->get_return_url( $order )));
-				exit;
+
+
+				//wp_redirect(get_permalink($this->get_return_url( $order )));
+				//exit;
 				
 			}
 			catch(Exception $e)
 			{
 				//echo $e->getMessage();
 				error_log('CALL BACK get exception:'.$e->getMessage(),0);
-				wp_redirect( get_permalink(get_option( 'woocommerce_checkout_page_id' )) );
-				exit;
+				//wp_redirect( get_permalink(get_option( 'woocommerce_checkout_page_id' )) );
+				//exit;
 			}
 			
 			
@@ -185,12 +205,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * @since 0.0.1
 	 */
 	public function nexio_checkout_return_failure_handler() {
-		error_log('failure CALLBACK WORKS!!!!!',0);
-		$data = file_get_contents('php://input');
-		error_log('failure data:'.$data,0);
-		$callbackdata = json_decode($data);
-		wp_redirect( get_permalink(get_option( 'woocommerce_checkout_page_id' )) );
-		exit;	
+		//nothing need to do now, since failure operation is processed by JavaScript.
 	}
 
 	/**
@@ -201,19 +216,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function generate_nexio_form( $order_id ) {
 		global $woocommerce;
 
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order($order_id);//new WC_Order( $order_id );
 
 		//get one time token first
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
 
 
-		$gateway_url = $this->get_iFrameURL();//dirname( __FILE__ ) . '/iframe_CreditCardTransactioin.php';
+		//$gateway_url = $this->get_iFrameURL();//dirname( __FILE__ ) . '/iframe_CreditCardTransactioin.php';
 		
-		$redirect_url_success = $this->get_return_url( $order );
-		$redirect_url_fail = get_permalink(get_option( 'woocommerce_checkout_page_id' ));
-		$phpurl = $this->get_callback_url();
-		//wp_redirect($redirect_url_fail);
-		//$iframeDomain = $onetimetoken.match(/^http(s?):\/\/.*?(?=\/)/)[0];
+		//$redirect_url_success = $this->get_return_url( $order );
+		//$redirect_url_fail = get_permalink(get_option( 'woocommerce_checkout_page_id' ));
+		//$phpurl = $this->get_callback_url();
 		
 		wc_enqueue_js('
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
@@ -229,27 +242,34 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("loader").style.display = "none";
 					}
 					if (event.data.event === "processed") {
+						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction.</p><code><br/>" + jsonStr + "</code>";
-						window.location = "'.$this->get_return_url( $order ).'";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
+						setTimeout(function () {
+							window.location = "'.$this->get_return_url( $order ).'";
+						}, 500);
+						
 					}
 					if (event.data.event === "error"){
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Failed to Process Credit Card Transaction.</p>";
-						window.location = "'.get_permalink(get_option( 'woocommerce_checkout_page_id' )).'";
+						var msg = event.data.data.message;
+						
+						window.document.getElementById("p1").innerHTML = "";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction failed</p><p>Response from Nexio: " + msg + "</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+						
 					}
 				}
 			});
 		');
+		
 
-		
-		
-		return '<form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
+		return '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via CMS Nexio', 'cms-gateway-nexio').'" />
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
-		<div id="loader">Loading Form...</div>';
+		<div id="loader"></div>';
 
 	}
+		
 
 	/**
 	 * Generate the json string for getting one time token.
@@ -258,7 +278,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	function build_gettoken_json($order_id)
 	{
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order($order_id);//new WC_Order( $order_id );
 		//1. get data array first
 			//1.1 get customer array first.
 		$customer = array(
@@ -293,13 +313,28 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		);
 
 		//3. uiOptions
-		$uiOptions = array(
-			'customTextUrl' => '',
-			'displaySubmitButton' => false,
-			'hideCvc' => false,
-			'requireCvc' => true,
-			'hideBilling' => false,
-			);
+		if(!empty($this->css))
+		{
+			$uiOptions = array(
+				'customTextUrl' => '',
+				'css' => $this->css,
+				'displaySubmitButton' => false,
+				'hideCvc' => false,
+				'requireCvc' => true,
+				'hideBilling' => false,
+				);
+		}
+		else
+		{
+			$uiOptions = array(
+				'customTextUrl' => '',
+				'displaySubmitButton' => false,
+				'hideCvc' => false,
+				'requireCvc' => true,
+				'hideBilling' => false,
+				);
+		}
+		
 		
 		//4. card
 		$card = array(
@@ -358,10 +393,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * @since 0.0.1
 	 */
 	public function get_creditcard_token($order_id)
-	{
-		//$this->WriteLog('begin get one time token');
-		
-		$order = new WC_Order( $order_id );
+	{		
+		$order = wc_get_order($order_id);//new WC_Order( $order_id );
 		try {
 			$data = $this->build_gettoken_json($order_id);
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
@@ -400,64 +433,15 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		}
 	}
 
-	/**
-	 * Get separate iFrame page URL.
-	 *
-	 * @since 0.0.1
-	 */
-	public function get_iFrameURL()
-	{
-		
-		$siteurl = get_site_url();
-		$wpconfigfilepath = $this->fs_get_wp_config_path();
-		if($wpconfigfilepath !=false)
-		{
-			$wordpressroot = dirname($wpconfigfilepath);
-			$pluginurl = plugin_dir_path( __FILE__ );
-	
-	
-	
-			//$finallink = str_replace( 'my-account/', 'iframe_CreditCardTransaction.php', $myaccount_page_url );
-	
-			$finallink = str_replace( $wordpressroot, $siteurl, $pluginurl );
-	
-			$path = str_replace("\\", "/", $finallink);
-	
-			return $path."iframe_CreditCardTransaction.php";
-		}
-		else
-			return false;
-	}
-
 	/*
 	 * Process the payment
 	 * 
 	 */
 	function receipt_page( $order_id ) {
-		
-		echo '<p>'.__('Thank you for your order, please input your payment information in blow Nexio Form and click the button.', 'cms-gateway-nexio').'</p>';
+		$order = wc_get_order($order_id);
 		echo $this->generate_nexio_form( $order_id );
 	}
 
-	public function fs_get_wp_config_path()
-	{
-		$base = dirname(__FILE__);
-		$path = false;
-
-		if (@file_exists(dirname(dirname($base))."\wp-config.php"))
-		{
-			$path = dirname(dirname($base))."\wp-config.php";
-		}
-		else
-		if (@file_exists(dirname(dirname(dirname($base)))."\wp-config.php"))
-		{
-			$path = dirname(dirname(dirname($base)))."\wp-config.php";
-		}
-		else
-			$path = false;
-
-		return $path;
-	}
 
 	/**
 	 * Get iFrame src url.
@@ -467,20 +451,19 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_iframe_src($newvalue)
 	{
-		//echo 'ontimetoken: '.$newvalue;
-		//todo if get error, need show notification
 		$src = $this->api_url."pay/v3/?token=".$newvalue;
 		return $src;
 	}
 	
 
 	public function process_payment( $order_id, $retry = true, $force_save_source = false, $previous_error = false ) {
-		$order = new WC_Order( $order_id );
-		
-		//$GLOBALS['token'] = $this->get_creditcard_token($order_id);
+
+		$order = wc_get_order($order_id);
+
 		return array(
 			'result'   => 'success',
-			'redirect' => $order->get_checkout_payment_url(true),//$this->get_return_url( $order ),
+			'redirect' => $order->get_checkout_payment_url(true),
 		);
+		
 	}
 }
