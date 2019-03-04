@@ -56,8 +56,36 @@ return apply_filters(
 			'label'       => __( 'CSS file location', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'CSS file location', 'cms-gateway-nexio' ),
-			'default'     => 'https://tester.nexiopaydev.com/example.css',
+			'default'     => 'https://tester.nexiopaydev.com/ecom-example1.css',
 			'desc_tip'    => true,
+		),
+		'fraud'                       => array(
+			'title'       => __( 'Fraud Checking', 'cms-gateway-nexio' ),
+			'label'       => __( 'Enable/Disable fraud checking', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'yes',
+		),
+		'requirecvc'                       => array(
+			'title'       => __( 'Require CVC', 'cms-gateway-nexio' ),
+			'label'       => __( 'Require CVC info', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'yes',
+		),
+		'hidecvc'                       => array(
+			'title'       => __( 'Hide CVC', 'cms-gateway-nexio' ),
+			'label'       => __( 'Hide CVC info', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'no',
+		),
+		'hidebilling'                       => array(
+			'title'       => __( 'Hide Billings', 'cms-gateway-nexio' ),
+			'label'       => __( 'Hide billings info', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'no',
 		),
 	)
 );

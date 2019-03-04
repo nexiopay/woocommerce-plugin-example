@@ -4,7 +4,7 @@
  * Description: Take credit card payments on your store using Nexio.
  * Author: Complete Merchant Solutions
  * Author URI: https://www.cmsonline.com/
- * Version: 0.0.02
+ * Version: 0.0.3
  * Requires at least: 4.4
  * Tested up to: 5.0
  * WC requires at least: 2.6

@@ -45,6 +45,37 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public $css;	
 
 	/**
+	 * fraud
+	 *
+	 * @var bool
+	 */
+	public $fraud;
+
+	/**
+	 * requirecvc
+	 *
+	 * @var bool
+	 */
+	public $requirecvc;
+
+	/**
+	 * hidecvc
+	 *
+	 * @var bool
+	 */
+	public $hidecvc;
+	
+
+	/**
+	 * hidebilling
+	 *
+	 * @var bool
+	 */
+	public $hidebilling;
+	
+
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -68,6 +99,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->user_name	= $this->get_option('user_name');
 		$this->password	= $this->get_option('password');
 		$this->css = trim($this->get_option('css'));
+		$this->fraud = $this->get_option('fraud');
+		$this->requirecvc = $this->get_option('requirecvc');
+		$this->hidecvc = $this->get_option('hidecvc');
+		$this->hidebilling = $this->get_option('hidebilling');
 		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
 		
 
@@ -169,26 +204,67 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		   isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
 		   isset($callbackdata->data->customer->orderNumber) && !empty($callbackdata->data->customer->orderNumber))
 		{
+			$order_id = $callbackdata->data->customer->orderNumber;
+				
+			error_log('ORDER Number:'.$order_id);
+			
+			$order    = wc_get_order( $order_id );
+
 			try
 			{
-				$order_id = $callbackdata->data->customer->orderNumber;
+				//check gateway response.
+				if($callbackdata->gatewayResponse->result !== 'Approved')
+				{
+					//although succes webhook is called, but the result in gateway response is not 'Approved', something wrong, do nothing
+					error_log('Success webhook is called, but gateway response is not approved, please check with Nexio!',0);
+					return;
+				}
 				
-				error_log('ORDER Number:'.$order_id);
-				
-				$order    = wc_get_order( $order_id );
-				
-				// Remove cart.
-				$order->add_order_note(sprintf(__('Nexio Payment Completed.', 'cms-gateway-nexio')));
-				$order->payment_complete();
-
-
-				//wp_redirect(get_permalink($this->get_return_url( $order )));
-				//exit;
+				if($this->fraud === 'yes')
+				{
+					//need check kount response first
+					if(isset($callbackdata->kountResponse) && !empty($callbackdata->kountResponse) &&
+					   isset($callbackdata->kountResponse->status) && !empty($callbackdata->kountResponse->status))
+					{
+						//check the status
+						if($callbackdata->kountResponse->status === 'success')
+						{
+							//everything is fine, complete the order
+							$this->complete_order($order, $callbackdata, true);
+							//$order->add_order_note(sprintf(__('Nexio Payment Completed. Fraud checking passed', 'cms-gateway-nexio')));
+							//$order->payment_complete();
+							return;
+						}
+						else
+						{
+							//kount fails or pending, do nothing
+							$order->add_order_note(sprintf(__('kount response status is '.$callbackdata->kountResponse->status.', please check with Nexio!', 'cms-gateway-nexio')));
+							error_log('kount response status is not success, please check with Nexio!',0);
+							return;
+						}
+						
+					}
+					else
+					{
+						//fraud is set to enable but no kount response, something wrong, do nothing
+						$order->add_order_note(sprintf(__('fraud checking is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						error_log('Fraud checking is selected but no kount response or status, please check with Nexio!',0);
+						return;
+					}
+				}
+				else
+				{
+					// Remove cart.
+					$this->complete_order($order, $callbackdata, false);
+					//$order->add_order_note(sprintf(__('Nexio Payment Completed. No fraud checking.', 'cms-gateway-nexio')));
+					//$order->payment_complete();
+				}
 				
 			}
 			catch(Exception $e)
 			{
 				//echo $e->getMessage();
+				$order->add_order_note(sprintf(__('CALL BACK get exception:'.$e->getMessage(), 'cms-gateway-nexio')));
 				error_log('CALL BACK get exception:'.$e->getMessage(),0);
 				//wp_redirect( get_permalink(get_option( 'woocommerce_checkout_page_id' )) );
 				//exit;
@@ -198,6 +274,40 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		} 
 		
 	}
+
+	/**
+	 * Payment completed successfully, process the order accrodingly.
+	 *
+	 * @since 0.0.3
+	 * @param WC_order $order 	   the order object
+	 * @param array $callbackdata  array data contains content come from Nexio server
+	 * @param bool $fraudchecking  
+	 * 
+	 */
+	public function complete_order($order, $callbackdata, $fraudchecking) {
+		//add transStatus, batchRef, refNumber, gatewayName, result and message as order note.
+		$order->payment_complete();
+
+		$note = 'Nexio Payment Completed, ';
+		if($fraudchecking)
+			$note = $note.'fraud checking passed';
+		else
+			$note = $note.'no fraud checking executed.';
+		
+		$order->add_order_note(sprintf(__($note, 'cms-gateway-nexio')));
+
+		//transStatus
+		//$order->add_order_note(sprintf(__('Transaction Status: '.$callbackdata->transactionStatus, 'cms-gateway-nexio')));
+		//batchRef
+		//((isset($callbackdata->gatewayResponse->batchRef) && !empty($callbackdata->gatewayResponse->batchRef))?$note.'batchRef: '.$callbackdata->gatewayResponse->batchRef.'\n':$note);
+		$order->add_order_note(sprintf(__('batchRef: '.$callbackdata->gatewayResponse->batchRef, 'cms-gateway-nexio')));
+		//refNumber
+		//((isset($callbackdata->gatewayResponse->refNumber) && !empty($callbackdata->gatewayResponse->refNumber))?$note.'refNumber: '.$callbackdata->gatewayResponse->refNumber.'\n':$note);
+		$order->add_order_note(sprintf(__('refNumber: '.$callbackdata->gatewayResponse->refNumber, 'cms-gateway-nexio')));
+
+		
+	}
+
 
 	/**
 	 * Handles the failure return from processing the payment.
@@ -242,6 +352,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("loader").style.display = "none";
 					}
 					if (event.data.event === "processed") {
+						alert("processed");
+						if("'.$this->fraud.'" === "yes")
+						{
+							if(event.data.data.kountResponse.status === "review")
+							{
+								window.document.getElementById("p1").innerHTML = "";
+								window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction is Auth only</p><p>Please go to Nexio dashboard to approve or decline the transaction manually</p><p>Click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+								return;
+							}
+						}
+							
 						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
 						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
@@ -251,6 +372,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						
 					}
 					if (event.data.event === "error"){
+						alert("error");
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
@@ -306,35 +428,20 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$processingOptions = array(
 			'webhookUrl' => $this->get_callback_url(),
 			'webhookFailUrl' => $this->get_failure_callback_url(),
-			'checkFraud' => true,
-			'verifyCvc' => false,
-			'verifyAvs' => 0,
+			'checkFraud' => ($this->fraud === 'yes'?true:false),
 			'verboseResponse' => true
 		);
+		
 
 		//3. uiOptions
-		if(!empty($this->css))
-		{
-			$uiOptions = array(
-				'customTextUrl' => '',
-				'css' => $this->css,
-				'displaySubmitButton' => false,
-				'hideCvc' => false,
-				'requireCvc' => true,
-				'hideBilling' => false,
-				);
-		}
-		else
-		{
-			$uiOptions = array(
-				'customTextUrl' => '',
-				'displaySubmitButton' => false,
-				'hideCvc' => false,
-				'requireCvc' => true,
-				'hideBilling' => false,
-				);
-		}
-		
+		$uiOptions = array(
+			'customTextUrl' => '',
+			'css' => (!empty($this->css)?$this->css:''),
+			'displaySubmitButton' => false,
+			'hideCvc' => ($this->hidecvc === 'yes'?true:false),
+			'requireCvc' => ($this->requirecvc === 'yes'?true:false),
+			'hideBilling' => ($this->hidebilling === 'yes'?true:false),
+		);
 		
 		//4. card
 		$card = array(
@@ -367,7 +474,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function get_callback_url()
 	{
 		$callbackurl = get_site_url(null,null,'https').'/wc-api/'.strtolower( get_class( $this ) );
-		error_log('callback url:'.$callbackurl,0);
 		
 		return $callbackurl;
 	}
