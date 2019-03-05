@@ -60,8 +60,8 @@ return apply_filters(
 			'desc_tip'    => true,
 		),
 		'fraud'                       => array(
-			'title'       => __( 'Fraud Checking', 'cms-gateway-nexio' ),
-			'label'       => __( 'Enable/Disable fraud checking', 'cms-gateway-nexio' ),
+			'title'       => __( 'Fraud Check', 'cms-gateway-nexio' ),
+			'label'       => __( 'Enable/Disable fraud check', 'cms-gateway-nexio' ),
 			'type'        => 'checkbox',
 			'description' => '',
 			'default'     => 'yes',

@@ -247,8 +247,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					else
 					{
 						//fraud is set to enable but no kount response, something wrong, do nothing
-						$order->add_order_note(sprintf(__('fraud checking is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
-						error_log('Fraud checking is selected but no kount response or status, please check with Nexio!',0);
+						$order->add_order_note(sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						error_log('Fraud check is selected but no kount response or status, please check with Nexio!',0);
 						return;
 					}
 				}
@@ -290,9 +290,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		$note = 'Nexio Payment Completed, ';
 		if($fraudchecking)
-			$note = $note.'fraud checking passed';
+			$note = $note.'fraud check passed';
 		else
-			$note = $note.'no fraud checking executed.';
+			$note = $note.'no fraud check executed.';
 		
 		$order->add_order_note(sprintf(__($note, 'cms-gateway-nexio')));
 
