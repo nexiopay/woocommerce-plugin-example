@@ -81,8 +81,8 @@ return apply_filters(
 			'default'     => 'no',
 		),
 		'hidebilling'                       => array(
-			'title'       => __( 'Hide Billings', 'cms-gateway-nexio' ),
-			'label'       => __( 'Hide billings info', 'cms-gateway-nexio' ),
+			'title'       => __( 'Hide Billing', 'cms-gateway-nexio' ),
+			'label'       => __( 'Hide billing info', 'cms-gateway-nexio' ),
 			'type'        => 'checkbox',
 			'description' => '',
 			'default'     => 'no',
