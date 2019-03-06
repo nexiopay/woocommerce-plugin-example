@@ -358,7 +358,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 							if(event.data.data.kountResponse.status === "review")
 							{
 								window.document.getElementById("p1").innerHTML = "";
-								window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction is Auth only</p><p>Please go to Nexio dashboard to approve or decline the transaction manually</p><p>Click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your order is Pending</p><p>Please contact Support for more details.</p><p>Click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
 								return;
 							}
 						}
