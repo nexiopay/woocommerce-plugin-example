@@ -119,10 +119,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 *
 	 * @since 0.0.1
 	 */
-	function custom_content_thankyou($order_id) {
+	public function custom_content_thankyou($order_id) {
 		$order = wc_get_order($order_id); 
 
-    	$paymethod = $order->payment_method_title;
+    	//$paymethod = $order->payment_method_title;
 		$orderstat = $order->get_status();
 		if($orderstat == 'processing')
 			echo '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
@@ -187,22 +187,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->form_fields = require( dirname( __FILE__ ) . '/nexio-settings.php' );
 	}
 
-	/**
-	 * Handles the return from processing the payment.
-	 *
-	 * @since 0.0.1
-	 */
-	public function nexio_checkout_return_handler() {
-		error_log('CALLBACK WORKS!!!!!',0);
-		
-		
-		$data = file_get_contents('php://input');
-		error_log('data:'.$data);
-		$callbackdata = json_decode($data);
-		
+
+	public function checking_success_data($callbackdata)
+	{
 		if(isset($callbackdata->data) && !empty($callbackdata->data) &&
-		   isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
-		   isset($callbackdata->data->customer->orderNumber) && !empty($callbackdata->data->customer->orderNumber))
+		isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
+		isset($callbackdata->data->customer->orderNumber) && !empty($callbackdata->data->customer->orderNumber))
 		{
 			$order_id = $callbackdata->data->customer->orderNumber;
 				
@@ -224,13 +214,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				{
 					//need check kount response first
 					if(isset($callbackdata->kountResponse) && !empty($callbackdata->kountResponse) &&
-					   isset($callbackdata->kountResponse->status) && !empty($callbackdata->kountResponse->status))
+						isset($callbackdata->kountResponse->status) && !empty($callbackdata->kountResponse->status))
 					{
 						//check the status
 						if($callbackdata->kountResponse->status === 'success')
 						{
 							//everything is fine, complete the order
-							$this->complete_order($order, $callbackdata, true);
+							$this->complete_order($order_id, $callbackdata, true);
 							//$order->add_order_note(sprintf(__('Nexio Payment Completed. Fraud checking passed', 'cms-gateway-nexio')));
 							//$order->payment_complete();
 							return;
@@ -255,7 +245,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				else
 				{
 					// Remove cart.
-					$this->complete_order($order, $callbackdata, false);
+					$this->complete_order($order_id, $callbackdata, false);
 					//$order->add_order_note(sprintf(__('Nexio Payment Completed. No fraud checking.', 'cms-gateway-nexio')));
 					//$order->payment_complete();
 				}
@@ -272,7 +262,23 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			
 			
 		} 
+	}
+
+	/**
+	 * Handles the return from processing the payment.
+	 *
+	 * @since 0.0.1
+	 */
+	public function nexio_checkout_return_handler() {
+		error_log('CALLBACK WORKS!!!!!',0);
 		
+		
+		$data = file_get_contents('php://input');
+		error_log('data:'.$data);
+		$callbackdata = json_decode($data);
+		
+		
+		checking_success_data($callbackdata);
 	}
 
 	/**
@@ -284,8 +290,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * @param bool $fraudchecking  
 	 * 
 	 */
-	public function complete_order($order, $callbackdata, $fraudchecking) {
+	public function complete_order($order_id, $callbackdata, $fraudchecking) {
 		//add transStatus, batchRef, refNumber, gatewayName, result and message as order note.
+		$order    = wc_get_order( $order_id );
 		$order->payment_complete();
 
 		$note = 'Nexio Payment Completed, ';
@@ -352,7 +359,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("loader").style.display = "none";
 					}
 					if (event.data.event === "processed") {
-						alert("processed");
 						if("'.$this->fraud.'" === "yes")
 						{
 							if(event.data.data.kountResponse.status === "review")
