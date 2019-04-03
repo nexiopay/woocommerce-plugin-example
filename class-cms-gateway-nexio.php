@@ -198,7 +198,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 		$data = file_get_contents('php://input');
 		error_log('data:'.$data);
-		$callbackdata = json_decode($data);
+		$callbackdata = json_decode($data)->data;
 		
 		if(isset($callbackdata->data) && !empty($callbackdata->data) &&
 		   isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
@@ -352,7 +352,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("loader").style.display = "none";
 					}
 					if (event.data.event === "processed") {
-						alert("processed");
 						if("'.$this->fraud.'" === "yes")
 						{
 							if(event.data.data.kountResponse.status === "review")
@@ -368,11 +367,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
-						}, 500);
+						}, 2000);
 						
 					}
 					if (event.data.event === "error"){
-						alert("error");
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
