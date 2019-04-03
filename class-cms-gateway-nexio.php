@@ -73,6 +73,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public $hidebilling;
 	
+	/**
+	 * shareSecret
+	 *
+	 * @var string
+	 */
+	public $shareSecret;
 
 
 	/**
@@ -104,8 +110,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
 		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
+		$this->merchant_id = $this->get_option('merchant_id');
 		
 
+		//get merchant share secret at the beginning
+		$this->shareSecret = $this->get_secret();
+
+		
 		// Hooks.
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'woocommerce_receipt_nexio', array( $this, 'receipt_page' ) );
@@ -187,9 +198,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->form_fields = require( dirname( __FILE__ ) . '/nexio-settings.php' );
 	}
 
-
+	/**
+	 * processing the callback data from nexio
+	 *
+	 * @since 0.0.4
+	 */
 	public function checking_success_data($callbackdata)
-	{
+	{	
 		if(isset($callbackdata->data) && !empty($callbackdata->data) &&
 		isset($callbackdata->gatewayResponse) && !empty($callbackdata->gatewayResponse) &&
 		isset($callbackdata->data->customer->orderNumber) && !empty($callbackdata->data->customer->orderNumber))
@@ -271,15 +286,209 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function nexio_checkout_return_handler() {
 		error_log('CALLBACK WORKS!!!!!',0);
+		//ob_start();
+		//var_dump($_SERVER);
+		//$result = ob_get_clean();
+		//error_log('$_SERVER: '.$result,0);
+		$headerStringValue = $_SERVER['HTTP_NEXIO_SIGNATURE'];
 		
-		
+		if($headerStringValue === null)
+			error_log('value is null');
+
+		error_log('nexio-signature: '.$headerStringValue,0);
 		$data = file_get_contents('php://input');
 		error_log('data:'.$data);
-		$callbackdata = json_decode($data);
 		
+
+		if($this->check_signature($headerStringValue,$data))
+		{
+			error_log('signature verification pass');
+			
+			$callbackdata = json_decode($data);
+			
+			
+			$this->checking_success_data($callbackdata->data);
+		}
+		else
+		{
+			error_log('signature verification not pass, try agin');
+			//try to get secret and do it again.
+			$this->shareSecret = $this->get_secret();
+			if($this->check_signature($headerStringValue,$data))
+			{
+				error_log('signature verification pass');
+				
+				$callbackdata = json_decode($data);
+				
+				
+				$this->checking_success_data($callbackdata->data);
+			}
+			else
+			{
+				error_log('signature verification not pass, give up retry');
+				error_log('nexio-signature verification failed, dump the data',0);
+			}
+			
+		}
+
 		
-		checking_success_data($callbackdata);
 	}
+
+	/**
+	 * update_secret
+	 * update the share secret of merchant
+	 * @since 0.0.5
+	 * @return string
+	 * 
+	 */
+	private function update_secret()
+	{
+		try {
+			$request = array(
+				'merchantId' => $this->merchant_id
+			);
+
+			$data = json_encode($request);
+			
+			//error_log('get secert request: '. $data);
+
+			//echo 'request: '.$data;
+			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
+			//error_log('basic auth is: '.$basicauth);
+			$ch = curl_init($this->api_url.'webhook/v3/updateMerchantWebhookSecret');
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+				"Authorization: $basicauth",
+				"Content-Type: application/json",
+				"Content-Length: " . strlen($data)));
+			$result = curl_exec($ch);
+			$error = curl_error($ch);
+			curl_close($ch);
+			
+			//error_log('get secert response: '.$result);
+
+			if ($error) {
+				//echo "CURL Error #: $error";
+				return "error";
+			} else {
+				if(json_decode($result)->error)
+				{
+					//echo 'there is something wrong';
+					return "error";
+				}
+				
+				$secert = json_decode($result)->secret;
+				error_log('update secert: '.$secert);
+				return $secert;
+			}
+		} catch (Exception $e) {
+			//echo "Get token failed #: $e->getMessage()";
+			error_log("update secert failed:".$e->getMessage(),0);
+			return "error";//$e->getMessage();
+		}
+	}
+
+	/**
+	 * get_secret
+	 * get the share secret of merchant
+	 * @since 0.0.5
+	 * @return string
+	 * 
+	 */
+	private function get_secret()
+	{
+		try {
+			$request = array(
+				'merchantId' => $this->merchant_id
+			);
+
+			$data = json_encode($request);
+			
+			//error_log('get secert request: '. $data);
+
+			//echo 'request: '.$data;
+			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
+			//error_log('basic auth is: '.$basicauth);
+			$ch = curl_init($this->api_url.'webhook/v3/merchantWebhookSecret/'.$this->merchant_id);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
+			//curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+				"Authorization: $basicauth",
+				"Content-Type: application/json"));
+			$result = curl_exec($ch);
+			$error = curl_error($ch);
+			curl_close($ch);
+			
+			error_log('get secert response: '.$result);
+
+			if ($error) {
+				//echo "CURL Error #: $error";
+				return "error";
+			} else {
+				if(json_decode($result)->error)
+				{
+					//echo 'there is something wrong';
+					return "error";
+				}
+				
+				$secert = json_decode($result)->secret;
+				error_log('get secert: '.$secert);
+				return $secert;
+			}
+		} catch (Exception $e) {
+			//echo "Get token failed #: $e->getMessage()";
+			error_log("Get secert failed:".$e->getMessage(),0);
+			return "error";//$e->getMessage();
+		}
+	}
+
+	/**
+	 * check_signature
+	 * check the signature
+	 * @since 0.0.5
+	 * @param string $nexiosignature 	   the value of nexio-signature header
+	 * @param string $rawpayload  		   raw playload of the callback post data
+	 * @return bool
+	 */
+	private function check_signature($nexiosignature,$rawpayload)
+	{
+		$firstpos = strrpos($nexiosignature,'t=');
+		$commonpos = strrpos($nexiosignature, ',');
+		$secondpos = strrpos($nexiosignature,'v1=');
+		$len = strlen($nexiosignature);
+
+		$timestamp = substr($nexiosignature, $firstpos + 2, $commonpos - 2);
+		$signature = substr($nexiosignature, $secondpos + 3, $len - $secondpos - 3);
+
+		$newpayload = $timestamp.'.'.$rawpayload;
+
+		error_log('shareSecret: '.$this->shareSecret);
+		
+		if($this->shareSecret === 'error' || is_null($this->shareSecret))
+		{
+			//try to get shareSecret again
+			error_log('shareSecret is not set, get it first');
+			$this->shareSecret = $this->get_secret();
+			if($this->shareSecret === 'error' || is_null($this->shareSecret))
+			{			
+				error_log('shareSecret is not setted failed');
+				return false;
+			}
+		}
+
+		$verifysig = hash_hmac('sha256',$newpayload,$this->shareSecret);
+
+		error_log('newpayload sig: '.$verifysig);
+
+		if($verifysig === $signature)
+			return true;
+		else
+			return false;
+	}
+
 
 	/**
 	 * Payment completed successfully, process the order accrodingly.
@@ -303,13 +512,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 		$order->add_order_note(sprintf(__($note, 'cms-gateway-nexio')));
 
-		//transStatus
-		//$order->add_order_note(sprintf(__('Transaction Status: '.$callbackdata->transactionStatus, 'cms-gateway-nexio')));
-		//batchRef
-		//((isset($callbackdata->gatewayResponse->batchRef) && !empty($callbackdata->gatewayResponse->batchRef))?$note.'batchRef: '.$callbackdata->gatewayResponse->batchRef.'\n':$note);
 		$order->add_order_note(sprintf(__('batchRef: '.$callbackdata->gatewayResponse->batchRef, 'cms-gateway-nexio')));
-		//refNumber
-		//((isset($callbackdata->gatewayResponse->refNumber) && !empty($callbackdata->gatewayResponse->refNumber))?$note.'refNumber: '.$callbackdata->gatewayResponse->refNumber.'\n':$note);
+		
 		$order->add_order_note(sprintf(__('refNumber: '.$callbackdata->gatewayResponse->refNumber, 'cms-gateway-nexio')));
 
 		
@@ -333,17 +537,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function generate_nexio_form( $order_id ) {
 		global $woocommerce;
 
-		$order = wc_get_order($order_id);//new WC_Order( $order_id );
+		$order = wc_get_order($order_id);
 
 		//get one time token first
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
-
-
-		//$gateway_url = $this->get_iFrameURL();//dirname( __FILE__ ) . '/iframe_CreditCardTransactioin.php';
-		
-		//$redirect_url_success = $this->get_return_url( $order );
-		//$redirect_url_fail = get_permalink(get_option( 'woocommerce_checkout_page_id' ));
-		//$phpurl = $this->get_callback_url();
 		
 		wc_enqueue_js('
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
@@ -374,7 +571,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
-						}, 500);
+						}, 2000);
 						
 					}
 					if (event.data.event === "error"){
@@ -495,7 +692,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	{
 		$callbackurl = get_site_url(null,null,'https').'/wc-api/CALLBACK/';
 		
-		error_log('failure callback url:'.$callbackurl,0);
+		//error_log('failure callback url:'.$callbackurl,0);
 		return $callbackurl;
 	}
 
@@ -509,8 +706,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$order = wc_get_order($order_id);//new WC_Order( $order_id );
 		try {
 			$data = $this->build_gettoken_json($order_id);
+			//echo 'request: '.$data;
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
+			error_log('basic auth: '.$basicauth);
 			$ch = curl_init($this->api_url.'pay/v3/token');
+			
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -521,7 +721,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$result = curl_exec($ch);
 			$error = curl_error($ch);
 			curl_close($ch);
-		
+			error_log('getonetimetoken response: '.$result);
 			if ($error) {
 				//echo "CURL Error #: $error";
 				return "error";
@@ -551,6 +751,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	function receipt_page( $order_id ) {
 		$order = wc_get_order($order_id);
+		//echo $this->get_callback_url();
+		
 		echo $this->generate_nexio_form( $order_id );
 	}
 
