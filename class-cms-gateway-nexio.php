@@ -571,7 +571,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
-						}, 2000);
+						}, 5000);
 						
 					}
 					if (event.data.event === "error"){
