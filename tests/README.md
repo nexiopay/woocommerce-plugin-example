@@ -22,9 +22,6 @@ Sample usages:
     #  The <db-name> is woocommerce_tests in above sample.
     #  The <db-user> is root in above sample.
     #  The <db-password> is root in above sample.
-    
-    $ tests/bin/install.sh woocommerce_tests root 'a\\b/&'
-    #  The actual password only has a single backslash, but it's escaped to prevent the shell and PHP from treating it as a backspace character
 
 **Important**: The `<db-name>` database will be created if it doesn't exist and all data will be removed during testing.
 
