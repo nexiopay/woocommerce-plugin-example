@@ -67,6 +67,14 @@ return apply_filters(
 			'default'     => 'https://tester.nexiopaydev.com/ecom-example1.css',
 			'desc_tip'    => true,
 		),
+		'customtext_url'                       	=> array(
+			'title'       => __( 'Custom Text File', 'cms-gateway-nexio' ),
+			'label'       => __( 'Custom text file location', 'cms-gateway-nexio' ),
+			'type'        => 'text',
+			'description' => __( 'Custom text file location', 'cms-gateway-nexio' ),
+			'default'     => '',
+			'desc_tip'    => true,
+		),
 		'fraud'                       => array(
 			'title'       => __( 'Fraud Check', 'cms-gateway-nexio' ),
 			'label'       => __( 'Enable/Disable fraud check', 'cms-gateway-nexio' ),

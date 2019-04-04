@@ -45,6 +45,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public $css;	
 
 	/**
+	 * customtext_url
+	 *
+	 * @var string
+	 */
+	public $customtext_url;
+
+	/**
 	 * fraud
 	 *
 	 * @var bool
@@ -104,14 +111,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->api_url		= $this->get_option('api_url');
 		$this->user_name	= $this->get_option('user_name');
 		$this->password	= $this->get_option('password');
+		$this->merchant_id = $this->get_option('merchant_id');
 		$this->css = trim($this->get_option('css'));
+		$this->customtext_url = trim($this->get_option('customtext_url'));
 		$this->fraud = $this->get_option('fraud');
 		$this->requirecvc = $this->get_option('requirecvc');
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
 		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
-		$this->merchant_id = $this->get_option('merchant_id');
-		
 
 		//get merchant share secret at the beginning
 		$this->shareSecret = $this->get_secret();
@@ -638,7 +645,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//3. uiOptions
 		$uiOptions = array(
-			'customTextUrl' => '',
 			'css' => (!empty($this->css)?$this->css:''),
 			'displaySubmitButton' => false,
 			'hideCvc' => ($this->hidecvc === 'yes'?true:false),
@@ -646,6 +652,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'hideBilling' => ($this->hidebilling === 'yes'?true:false),
 		);
 		
+		if(!is_null($this->customtext_url))
+		{
+			$uiOptions['customTextUrl'] = $this->customtext_url;
+		}
+
 		//4. card
 		$card = array(
 			'cardHolderName' => $order->get_billing_first_name().' '.$order->get_billing_last_name()

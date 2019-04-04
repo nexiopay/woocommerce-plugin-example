@@ -39,6 +39,7 @@ Example:
         _(If you have questions or if you need a Nexio username and password, please contact integrations@nexiopay.com)_
     - **Merchant Id**: The merchant id of your Nexio account
     - **CSS**: The URL where your CSS file is hosted (required for custom CSS).
+    - **Custom Text File**: The URL where your custom text file is hosted.
     - **Fraud Check**: Enable fraud check through Kount.
         _(If you would like to enable Kount on your Nexio account, please contact integrations@nexiopay.com)_
     - **Require CVC**: Require CVC in Nexio form.
@@ -82,12 +83,13 @@ Example:
 
 ## Notes
 - Requires at least: 4.4
-- Tested up to: 0.0.5
+- Tested up to: 0.0.6
 - Requires PHP: 5.6
-- Stable tag: 0.0.5
+- Stable tag: 0.0.6
 - License: GPLv3
 
 
 ## Changelog
 * 0.0.1 - 2019-02-26
 * 0.0.5 - 2019-04-03
+* 0.0.6 - 2019-04-04
