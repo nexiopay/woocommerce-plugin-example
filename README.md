@@ -37,7 +37,7 @@ Example:
     - **User Name**: Your Nexio username
     - **Password**: Your Nexio password
         _(If you have questions or if you need a Nexio username and password, please contact integrations@nexiopay.com)_
-    - **Merchang Id**: The merchant id of your Nexio account
+    - **Merchant Id**: The merchant id of your Nexio account
     - **CSS**: The URL where your CSS file is hosted (required for custom CSS).
     - **Fraud Check**: Enable fraud check through Kount.
         _(If you would like to enable Kount on your Nexio account, please contact integrations@nexiopay.com)_
@@ -84,7 +84,7 @@ Example:
 - Requires at least: 4.4
 - Tested up to: 0.0.5
 - Requires PHP: 5.6
-- Stable tag: 0.05
+- Stable tag: 0.0.5
 - License: GPLv3
 
 
