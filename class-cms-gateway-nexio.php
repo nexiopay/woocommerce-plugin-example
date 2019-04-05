@@ -536,10 +536,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
 						}, 5000);
+
 						
 					}
 					if (event.data.event === "error"){
-						alert("error");
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
