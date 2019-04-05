@@ -12,11 +12,10 @@ require dirname(dirname( __FILE__ )) . '/cms-gateway-nexio.php';
  */
 
 class TestCMSGatewayNexio extends WC_Unit_Test_Case{
-	//public $privacy_instance;
 
 	public function setUp()
     {
-        //$this->privacy_instance = new CMS_Nexio_Privacy();
+        
 	}
 	
 	/*

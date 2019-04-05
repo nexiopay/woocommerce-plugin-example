@@ -21,7 +21,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $this->nexio_class = new CMS_Gateway_Nexio();
         //create test order
         $this->order  = WC_Helper_Order::create_order();
-        //echo 'order id: '. $this->order->get_id();
+        
 	}
     
     //a sample of stunk a function
@@ -35,8 +35,6 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $stub->method('get_creditcard_token')
              ->willReturn('error');
 
-        // Calling $stub->doSomething() will now return
-        // 'foo'.
         $this->assertEquals('error', $stub->get_creditcard_token($this->order->get_id()));
     }
 
@@ -56,18 +54,16 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                             ),
 
                             );
-        //echo json_encode($callbackdata);
+        
         $data = json_decode(json_encode($callbackdata));
-        //echo $callbackdata['gatewayResponse'];
+        
         $return = $this->nexio_class->complete_order($order_id,$data,true);
-        //echo 'status: '.$this->order->get_status();
+        
         $testorder = wc_get_order($order_id);
         $this->assertEquals('processing',$testorder->get_status());
 
         $notes = $this->get_private_order_notes($order_id);
-        //echo 'count: '.count($notes);
-        //echo json_encode($notes);
-        //$this->assertTrue(true);        
+          
     }
     
     public function test_complete_order_fraudfalse()
@@ -82,26 +78,21 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                             ),
 
                             );
-        //echo json_encode($callbackdata);
+        
         $data = json_decode(json_encode($callbackdata));
-        //echo $callbackdata['gatewayResponse'];
+        
         $return = $this->nexio_class->complete_order($order_id,$data,false);
-        //echo 'status: '.$this->order->get_status();
+        
         $testorder = wc_get_order($order_id);
         $this->assertEquals('processing',$testorder->get_status());
 
         $notes = $this->get_private_order_notes($order_id);
-        //echo 'count: '.count($notes);
-        //echo json_encode($notes);
-        //$this->assertTrue(true);        
+      
     }
 
     public function test_checking_success_data_1()
     {
-        //create an order
-        //$testorder = WC_Helper_Order::create_order();
-        //echo 'testorder status'.$testorder->get_status();
-        //set fraud to be true
+        
         $this->nexio_class->fraud = 'yes';
         //mock callback data, trans success
         $callbackdata = array(
@@ -121,24 +112,18 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                     ),
                             );
         $data = json_decode(json_encode($callbackdata));
-        //todo considering changing fraud checking.
+        
         $this->nexio_class->checking_success_data($data);
 
         $notes = $this->get_private_order_notes($this->order->get_id());
-        //echo 'testorder id: '.$this->order->get_id();
-        //echo json_encode($notes);
-        //echo 'testorder status'.$testorder->get_status();
-        //todo assert
+        
         $this->order = wc_get_order($this->order->get_id());
         $this->assertEquals('processing',$this->order->get_status());;
     }
 
     public function test_checking_success_data_2()
     {
-        //create an order
-        //$testorder = WC_Helper_Order::create_order();
-        //echo 'testorder status'.$testorder->get_status();
-        //set fraud to be false
+        
         $this->nexio_class->fraud = 'no';
         //mock callback data, trans success
         $callbackdata = array(
@@ -158,24 +143,17 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                     ),
                             );
         $data = json_decode(json_encode($callbackdata));
-        //todo considering changing fraud checking.
+        
         $this->nexio_class->checking_success_data($data);
 
         $notes = $this->get_private_order_notes($this->order->get_id());
-        //echo 'testorder id: '.$this->order->get_id();
-        //echo json_encode($notes);
-        //echo 'testorder status'.$testorder->get_status();
-        //todo assert
+        
         $this->order = wc_get_order($this->order->get_id());
         $this->assertEquals('processing',$this->order->get_status());
     }
 
     public function test_checking_success_data_3()
     {
-        //create an order
-        //$testorder = WC_Helper_Order::create_order();
-        //echo 'testorder status'.$testorder->get_status();
-        //set fraud to be false
         $this->nexio_class->fraud = 'no';
         //mock callback data, trans failed
         $callbackdata = array(
@@ -195,27 +173,21 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                     ),
                             );
         $data = json_decode(json_encode($callbackdata));
-        //todo considering changing fraud checking.
+        
         $this->nexio_class->checking_success_data($data);
 
         $notes = $this->get_private_order_notes($this->order->get_id());
 
         //since payment is not completed, nothing should happen.
         $this->assertNull($notes);
-        //echo 'testorder id: '.$this->order->get_id();
-        //echo json_encode($notes);
-        //echo 'testorder status'.$testorder->get_status();
-        //todo assert
+        
         $this->order = wc_get_order($this->order->get_id());
-        //echo implode("|",$this->order);
+        
         $this->assertEquals('pending',$this->order->get_status());
     }
 
     public function test_checking_success_data_4()
     {
-        //create an order
-        //$testorder = WC_Helper_Order::create_order();
-        //echo 'testorder status'.$testorder->get_status();
         //set fraud to be false
         $this->nexio_class->fraud = 'yes';
         //mock callback data, trans approved, kount status is review.
@@ -236,19 +208,16 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                     ),
                             );
         $data = json_decode(json_encode($callbackdata));
-        //todo considering changing fraud checking.
+        
         $this->nexio_class->checking_success_data($data);
 
         $notes = $this->get_private_order_notes($this->order->get_id());
         
         //since kount status is review, only one note should be added.
         $this->assertEquals(1,count($notes));
-        //echo 'testorder id: '.$this->order->get_id();
-        //echo json_encode($notes);
-        //echo 'testorder status'.$testorder->get_status();
-        //todo assert
+        
         $this->order = wc_get_order($this->order->get_id());
-        //echo implode("|",$this->order);
+       
         $this->assertEquals('pending',$this->order->get_status());
     }
 
@@ -292,9 +261,9 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
                                             ),
 
                             );
-        //echo json_encode($callbackdata);
+        
         $data = json_decode(json_encode($callbackdata));
-        //echo $callbackdata['gatewayResponse'];
+        
         $return = $this->nexio_class->complete_order($order_id,$data,false);
         //now, the order status is pending
         $expected = '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
@@ -369,13 +338,6 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
     public function test_generate_nexio_form()
 	{
         $order_id = $this->order->get_id();
-        /*
-        $stub = $this->createMock(CMS_Gateway_Nexio::class);
-
-        // Configure the stub.
-        $stub->method('get_creditcard_token')
-             ->willReturn('123456');
-        */
         
         $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
             ->setMethods(['get_creditcard_token'])
@@ -399,27 +361,6 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $this->assertEquals($return,$return2);
 	}
 
-
-    /*
-    public function test_get_noexist_order()
-    {
-        $order_id = 6;
-        $order = wc_get_order($order_id);
-        $callbackdata = array(
-            'id' => "eyJuYW1lIjoidXNhZXBheSIsIm1lcmNoYW50SWQiOiIxMDAwMzkiLCJyZWZOdW1iZXIiOiIzMTAxODc0MTY5IiwicmFuZG9tIjoiMzEwMTg3NDE2OSIsImN1cnJlbmN5IjoidXNkIn0",
-            'gatewayResponse'       => array(
-                                                'batchRef' => "123456",
-                                                'refNumber' => "112233",
-                                            ),
-
-                            );
-        //echo json_encode($callbackdata);
-        $data = json_decode(json_encode($callbackdata));
-        $this->nexio_class->complete_order($order_id,$data,true);
-        $order = wc_get_order($order_id);
-        $this->assertTrue($order);
-    }
-    */
 
     //get order notes
     function get_private_order_notes( $order_id){

@@ -100,9 +100,7 @@ function woocommerce_gateway_nexio_init() {
 			 * @version 4.0.0
 			 */
 			public function init() {
-				//if ( is_admin() ) {
-				//	require_once dirname( __FILE__ ) . '/class-cms-nexio-privacy.php';
-				//}
+				
 				require_once dirname( __FILE__ ) . '/class-cms-gateway-nexio.php';
 
 				add_filter( 'woocommerce_payment_gateways', array($this,'add_gateways') );				

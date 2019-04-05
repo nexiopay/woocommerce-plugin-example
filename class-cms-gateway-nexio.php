@@ -140,13 +140,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function custom_content_thankyou($order_id) {
 		$order = wc_get_order($order_id); 
 
-    	//$paymethod = $order->payment_method_title;
 		$orderstat = $order->get_status();
 		if($orderstat == 'processing')
 			echo '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
 		else
 			echo '<p>'.__('Payment is successfully processed by Nexio, but your order status is not processing, please check!').'</p>';
-		//wc_add_notice( __('Successfully Processed Credit Card Transaction.'), 'notice' );
 	}
 
 	/**
@@ -170,33 +168,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function payment_scripts() {
 		
 	}
-	/**
-	 * Get_icon function.
-	 *
-	 * @since 1.0.0
-	 * @version 4.0.0
-	 * @return string
-	 * for later use
-	 */
-	/*
-	public function get_icon() {
-		$icons = $this->payment_icons();
-
-		$icons_str = '';
-
-		$icons_str .= isset( $icons['visa'] ) ? $icons['visa'] : '';
-		$icons_str .= isset( $icons['amex'] ) ? $icons['amex'] : '';
-		$icons_str .= isset( $icons['mastercard'] ) ? $icons['mastercard'] : '';
-
-		if ( 'USD' === get_woocommerce_currency() ) {
-			$icons_str .= isset( $icons['discover'] ) ? $icons['discover'] : '';
-			$icons_str .= isset( $icons['jcb'] ) ? $icons['jcb'] : '';
-			$icons_str .= isset( $icons['diners'] ) ? $icons['diners'] : '';
-		}
-
-		return apply_filters( 'woocommerce_gateway_icon', $icons_str, $this->id );
-	}
-	*/
 
 	/**
 	 * Initialise Gateway Settings Form Fields
@@ -243,8 +214,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						{
 							//everything is fine, complete the order
 							$this->complete_order($order_id, $callbackdata, true);
-							//$order->add_order_note(sprintf(__('Nexio Payment Completed. Fraud checking passed', 'cms-gateway-nexio')));
-							//$order->payment_complete();
+							
 							return;
 						}
 						else
@@ -268,18 +238,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				{
 					// Remove cart.
 					$this->complete_order($order_id, $callbackdata, false);
-					//$order->add_order_note(sprintf(__('Nexio Payment Completed. No fraud checking.', 'cms-gateway-nexio')));
-					//$order->payment_complete();
+					
 				}
 				
 			}
 			catch(Exception $e)
 			{
-				//echo $e->getMessage();
 				$order->add_order_note(sprintf(__('CALL BACK get exception:'.$e->getMessage(), 'cms-gateway-nexio')));
 				error_log('CALL BACK get exception:'.$e->getMessage(),0);
-				//wp_redirect( get_permalink(get_option( 'woocommerce_checkout_page_id' )) );
-				//exit;
 			}
 			
 			
@@ -293,10 +259,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function nexio_checkout_return_handler() {
 		error_log('CALLBACK WORKS!!!!!',0);
-		//ob_start();
-		//var_dump($_SERVER);
-		//$result = ob_get_clean();
-		//error_log('$_SERVER: '.$result,0);
+		
 		$headerStringValue = $_SERVER['HTTP_NEXIO_SIGNATURE'];
 		
 		if($headerStringValue === null)
@@ -356,12 +319,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			);
 
 			$data = json_encode($request);
-			
-			//error_log('get secert request: '. $data);
-
-			//echo 'request: '.$data;
+		
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
-			//error_log('basic auth is: '.$basicauth);
+			
 			$ch = curl_init($this->api_url.'webhook/v3/updateMerchantWebhookSecret');
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -374,15 +334,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			
-			//error_log('get secert response: '.$result);
+			
 
 			if ($error) {
-				//echo "CURL Error #: $error";
 				return "error";
 			} else {
 				if(json_decode($result)->error)
 				{
-					//echo 'there is something wrong';
+					
 					return "error";
 				}
 				
@@ -391,9 +350,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return $secert;
 			}
 		} catch (Exception $e) {
-			//echo "Get token failed #: $e->getMessage()";
+			
 			error_log("update secert failed:".$e->getMessage(),0);
-			return "error";//$e->getMessage();
+			return "error";
 		}
 	}
 
@@ -413,14 +372,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 			$data = json_encode($request);
 			
-			//error_log('get secert request: '. $data);
-
-			//echo 'request: '.$data;
+			
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
-			//error_log('basic auth is: '.$basicauth);
+			
 			$ch = curl_init($this->api_url.'webhook/v3/merchantWebhookSecret/'.$this->merchant_id);
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
-			//curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 				"Authorization: $basicauth",
@@ -432,12 +389,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			error_log('get secert response: '.$result);
 
 			if ($error) {
-				//echo "CURL Error #: $error";
+				
 				return "error";
 			} else {
 				if(json_decode($result)->error)
 				{
-					//echo 'there is something wrong';
+					
 					return "error";
 				}
 				
@@ -446,9 +403,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return $secert;
 			}
 		} catch (Exception $e) {
-			//echo "Get token failed #: $e->getMessage()";
+			
 			error_log("Get secert failed:".$e->getMessage(),0);
-			return "error";//$e->getMessage();
+			return "error";
 		}
 	}
 
@@ -610,7 +567,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	function build_gettoken_json($order_id)
 	{
-		$order = wc_get_order($order_id);//new WC_Order( $order_id );
+		$order = wc_get_order($order_id);
 		//1. get data array first
 			//1.1 get customer array first.
 		$customer = array(
@@ -639,7 +596,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'webhookUrl' => $this->get_callback_url(),
 			'webhookFailUrl' => $this->get_failure_callback_url(),
 			'checkFraud' => ($this->fraud === 'yes'?true:false),
-			'verboseResponse' => true
+			'verboseResponse' => false
 		);
 		
 
@@ -674,7 +631,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//convert to json
 		$jsondata = json_encode($request);
-		//echo $jsondata;
+		
 		return $jsondata;
 	}
 
@@ -703,7 +660,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	{
 		$callbackurl = get_site_url(null,null,'https').'/wc-api/CALLBACK/';
 		
-		//error_log('failure callback url:'.$callbackurl,0);
+		
 		return $callbackurl;
 	}
 
@@ -714,10 +671,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_creditcard_token($order_id)
 	{		
-		$order = wc_get_order($order_id);//new WC_Order( $order_id );
+		$order = wc_get_order($order_id);
 		try {
 			$data = $this->build_gettoken_json($order_id);
-			//echo 'request: '.$data;
+			
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
 			error_log('basic auth: '.$basicauth);
 			$ch = curl_init($this->api_url.'pay/v3/token');
@@ -734,25 +691,25 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			curl_close($ch);
 			error_log('getonetimetoken response: '.$result);
 			if ($error) {
-				//echo "CURL Error #: $error";
+				
 				return "error";
 			} else {
-				//echo $result;
+				
 				$onetimetoken = json_decode($result)->token;
 				if(json_decode($result)->error)
 				{
-					//echo 'there is something wrong';
+					
 					return "error";
 				}
 				$this->token = $onetimetoken;
-				//echo "Get One Time Token #: $onetimetoken";
+				
 				error_log("Get One Time Token:".$onetimetoken,0);
 				return json_decode($result)->token;
 			}
 		} catch (Exception $e) {
-			//echo "Get token failed #: $e->getMessage()";
+			
 			error_log("Get One Time Token:".$e->getMessage(),0);
-			return "error";//$e->getMessage();
+			return "error";
 		}
 	}
 
@@ -762,7 +719,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	function receipt_page( $order_id ) {
 		$order = wc_get_order($order_id);
-		//echo $this->get_callback_url();
+		
 		
 		echo $this->generate_nexio_form( $order_id );
 	}
