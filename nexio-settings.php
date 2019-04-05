@@ -103,5 +103,12 @@ return apply_filters(
 			'description' => '',
 			'default'     => 'no',
 		),
+		'authonly'                       => array(
+			'title'       => __( 'Auth Only', 'cms-gateway-nexio' ),
+			'label'       => __( 'Auth Only', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'no',
+		),
 	)
 );

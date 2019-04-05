@@ -45,6 +45,7 @@ Example:
     - **Require CVC**: Require CVC in Nexio form.
     - **Hide CVC**: Hide CVC.
     - **Hide Billing**: Hide billing info.
+    - **Auth Only**: Make the transaction auth only.
 9. Scroll to the bottom of the page and click ‘Save changes’.
 Example:
 ![Payment methods settings example](screenshots/paymentMethodSettings.png)
@@ -83,9 +84,9 @@ Example:
 
 ## Notes
 - Requires at least: 4.4
-- Tested up to: 0.0.6
+- Tested up to: 0.0.7
 - Requires PHP: 5.6
-- Stable tag: 0.0.6
+- Stable tag: 0.0.7
 - License: GPLv3
 
 
@@ -93,3 +94,4 @@ Example:
 * 0.0.1 - 2019-02-26
 * 0.0.5 - 2019-04-03
 * 0.0.6 - 2019-04-04
+* 0.0.7 - 2019-04-05
