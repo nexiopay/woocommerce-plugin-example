@@ -81,11 +81,21 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public $hidebilling;
 	
 	/**
+	 * authonly
+	 *
+	 * @var bool
+	 */
+	public $authonly;
+
+
+	/**
 	 * shareSecret
 	 *
 	 * @var string
 	 */
 	public $shareSecret;
+
+
 
 
 	/**
@@ -118,6 +128,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->requirecvc = $this->get_option('requirecvc');
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
+		$this->authonly = $this->get_option('authonly');
 		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
 
 		//get merchant share secret at the beginning
@@ -621,12 +632,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//5. TODO cart
 
+
 		//build the whole array
 		$request = array(
 			'data' => $data,
 			'processingOptions' => $processingOptions,
 			'uiOptions' => $uiOptions,
-			'card' => $card
+			'card' => $card,
+			'isAuthOnly' => ($this->authonly === 'yes'?true:false),
 		);
 
 		//convert to json
@@ -674,7 +687,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$order = wc_get_order($order_id);
 		try {
 			$data = $this->build_gettoken_json($order_id);
-			
+			error_log('one timetoken request: '.$data);
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
 			error_log('basic auth: '.$basicauth);
 			$ch = curl_init($this->api_url.'pay/v3/token');
