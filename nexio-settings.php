@@ -51,12 +51,28 @@ return apply_filters(
 			'default'     => '',
 			'desc_tip'    => true,
 		),
+		'merchant_id'                       => array(
+			'title'       => __( 'Merchant Id', 'cms-gateway-nexio' ),
+			'label'       => __( 'Merchant Id of Nexio account', 'cms-gateway-nexio' ),
+			'type'        => 'text',
+			'description' => __( 'Merchant Id of your Nexio account', 'cms-gateway-nexio' ),
+			'default'     => '',
+			'desc_tip'    => true,
+		),
 		'css'                       	=> array(
 			'title'       => __( 'CSS', 'cms-gateway-nexio' ),
 			'label'       => __( 'CSS file location', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'CSS file location', 'cms-gateway-nexio' ),
 			'default'     => 'https://tester.nexiopaydev.com/ecom-example1.css',
+			'desc_tip'    => true,
+		),
+		'customtext_url'                       	=> array(
+			'title'       => __( 'Custom Text File', 'cms-gateway-nexio' ),
+			'label'       => __( 'Custom text file location', 'cms-gateway-nexio' ),
+			'type'        => 'text',
+			'description' => __( 'Custom text file location', 'cms-gateway-nexio' ),
+			'default'     => '',
 			'desc_tip'    => true,
 		),
 		'fraud'                       => array(

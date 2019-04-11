@@ -4,7 +4,7 @@
  * Description: Take credit card payments on your store using Nexio.
  * Author: Complete Merchant Solutions
  * Author URI: https://www.cmsonline.com/
- * Version: 0.0.3
+ * Version: 0.0.6
  * Requires at least: 4.4
  * Tested up to: 5.0
  * WC requires at least: 2.6
@@ -100,9 +100,7 @@ function woocommerce_gateway_nexio_init() {
 			 * @version 4.0.0
 			 */
 			public function init() {
-				if ( is_admin() ) {
-					require_once dirname( __FILE__ ) . '/class-cms-nexio-privacy.php';
-				}
+				
 				require_once dirname( __FILE__ ) . '/class-cms-gateway-nexio.php';
 
 				add_filter( 'woocommerce_payment_gateways', array($this,'add_gateways') );				
