@@ -218,7 +218,57 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
         $this->order = wc_get_order($this->order->get_id());
        
-        $this->assertEquals('pending',$this->order->get_status());
+        $this->assertEquals('on-hold',$this->order->get_status());
+    }
+
+
+    public function test_checking_fail_data_1()
+    {
+        //mock callback data, Kount fail
+        $callbackdata = array(
+            'kountError' => true,
+            'merchantId' => '100039',
+            'kountResults' => array(
+                                        'result' => 'declined',
+                                        'data' => array(
+                                                            'ORDR' => $this->order->get_id(),
+                                                        ),
+                                    ),
+                            );
+        $data = json_decode(json_encode($callbackdata));
+        
+        $this->nexio_class->checking_fail_data($data);
+
+        $notes = $this->get_private_order_notes($this->order->get_id());
+        
+        $this->order = wc_get_order($this->order->get_id());
+        $this->assertEquals('failed',$this->order->get_status());;
+    }
+
+    public function test_checking_fail_data_2()
+    {
+        //mock callback data, gateway fail
+        $callbackdata = array(
+            'gatewayProcessingError' => true,
+            'message' => 'Invalid Transaction',
+            'merchantId' => '100039',
+            'gatewayResponse' => array(
+                                        'result' => 'Declined',
+                                        'status' => 'declined',
+                                        'type' => 'sale',
+                                        'refNum' => '3102447185',
+                                        'authCode' => '000000',
+                                        'batchId' => '409143',
+                                    ),
+                            );
+        $data = json_decode(json_encode($callbackdata));
+        
+        $this->nexio_class->checking_fail_data($data);
+
+        $notes = $this->get_private_order_notes($this->order->get_id());
+        
+        $this->order = wc_get_order($this->order->get_id());
+        $this->assertEquals('pending',$this->order->get_status());;
     }
 
 
