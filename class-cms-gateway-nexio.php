@@ -611,7 +611,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 							if(event.data.data.kountResponse.status === "review")
 							{
 								window.document.getElementById("p1").innerHTML = "";
-								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( woocommerce_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
+								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( wc_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
 								return;
 							}
 						}

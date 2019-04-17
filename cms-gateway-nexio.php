@@ -7,7 +7,7 @@
  * Version: 0.0.8
  * Requires at least: 4.4
  * Tested up to: 5.0
- * WC requires at least: 2.6
+ * WC requires at least: 3.0
  * WC tested up to: 5.1
  * Text Domain: cms-gateway-nexio
  * Domain Path: /languages
