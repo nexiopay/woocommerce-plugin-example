@@ -228,10 +228,20 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 							
 							return;
 						}
+						else if($callbackdata->kountResponse->status === 'review')
+						{
+							//kount response is review, clear cart, change order status to on hold, add note
+							$order->update_status('on-hold', 'Transaction is AuthOnly, please login Nexio dashboard to aprrove or decline it!');
+							// Remove cart.
+							WC()->cart->empty_cart();
+							error_log('kount response status is review!',0);
+							return;
+						}
 						else
 						{
-							//kount fails or pending, do nothing
-							$order->add_order_note(sprintf(__('kount response status is '.$callbackdata->kountResponse->status.', please check with Nexio!', 'cms-gateway-nexio')));
+							//kount fails, update status to failed, acutally it should not happen, since it comes from payment success callback URL
+							$order->update_status('failed', sprintf(__('kount response status is '.$callbackdata->kountResponse->status.', please check with Nexio!', 'cms-gateway-nexio')));
+							
 							error_log('kount response status is not success, please check with Nexio!',0);
 							return;
 						}
@@ -239,8 +249,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					}
 					else
 					{
-						//fraud is set to enable but no kount response, something wrong, do nothing
-						$order->add_order_note(sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						//fraud is set to enable but no kount response, something wrong, update status to failed,acutally it should not happen, since it comes from payment success callback URL
+						$order->update_status('failed', sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						
 						error_log('Fraud check is selected but no kount response or status, please check with Nexio!',0);
 						return;
 					}
@@ -494,6 +505,27 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 	}
 
+	/**
+	 * processing the failure callback data from nexio
+	 *
+	 * @since 0.0.8
+	 */
+	public function checking_fail_data($callbackdata)
+	{
+		//right now, only kount failure can get order id.
+		if(isset($callbackdata->kountError) && !empty($callbackdata->kountError === true) &&
+		isset($callbackdata->kountResults->data->ORDR) && !empty($callbackdata->kountResults->data->ORDR) &&
+		isset($callbackdata->kountResults->result) && !empty($callbackdata->kountResults->result))
+		{
+			//get order id
+			$order_id = $callbackdata->kountResults->data->ORDR;
+			error_log('Kount failed ORDER Number:'.$order_id);
+			
+			$order    = wc_get_order( $order_id );
+
+			$order->update_status('failed', sprintf(__('kount result is '.$callbackdata->kountResults->result.'!', 'cms-gateway-nexio')));
+		}
+	}
 
 	/**
 	 * Handles the failure return from processing the payment.
@@ -502,6 +534,49 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function nexio_checkout_return_failure_handler() {
 		//nothing need to do now, since failure operation is processed by JavaScript.
+		error_log('FAILURE CALLBACK WORKS!!!!!',0);
+		
+		$headerStringValue = $_SERVER['HTTP_NEXIO_SIGNATURE'];
+		
+		if($headerStringValue === null)
+			error_log('failure callback header nexio-signature is null');
+
+		error_log('failure callback nexio-signature: '.$headerStringValue,0);
+		$data = file_get_contents('php://input');
+		error_log('payment fail callback data:'.$data);
+		
+
+		if($this->check_signature($headerStringValue,$data))
+		{
+			error_log('failure callback signature verification pass');
+			
+			$callbackdata = json_decode($data);
+			
+			
+			$this->checking_fail_data($callbackdata->data);
+		}
+		else
+		{
+			error_log('failure callback signature verification not pass, try agin');
+			//try to get secret and do it again.
+			$this->shareSecret = $this->get_secret();
+			if($this->check_signature($headerStringValue,$data))
+			{
+				error_log('failure callback signature verification pass');
+				
+				$callbackdata = json_decode($data);
+				
+				
+				$this->checking_fail_data($callbackdata->data);
+			}
+			else
+			{
+				error_log('failure callback signature verification not pass, give up retry');
+				error_log('failure callback nexio-signature verification failed, dump the data',0);
+			}
+			
+		}
+
 	}
 
 	/**
@@ -536,7 +611,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 							if(event.data.data.kountResponse.status === "review")
 							{
 								window.document.getElementById("p1").innerHTML = "";
-								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your order is Pending</p><p>Please contact Support for more details.</p><p>Click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( woocommerce_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
 								return;
 							}
 						}
@@ -554,7 +629,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction failed</p><p>Response from Nexio: " + msg + "</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>Response from Nexio: " + msg + "</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
 						
 					}
 				}
