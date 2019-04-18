@@ -141,6 +141,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		add_action( 'woocommerce_api_' . strtolower( get_class( $this ) ), array( $this, 'nexio_checkout_return_handler' ) );
 		add_action( 'woocommerce_api_callback', array( $this, 'nexio_checkout_return_failure_handler' ) );
 		add_action( 'woocommerce_thankyou_nexio', array( $this,'custom_content_thankyou'), 10,1);
+
 	}
 	
 	/**
@@ -166,7 +167,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * @return null
 	 */
 	public function payment_fields() {
-		echo wpautop(wptexturize('Please click below button to continue payment'));
+		$testwarning = ''; 
+		
+		if (strpos($this->api_url, 'sandbox') !== false) {
+			//it is a test URL
+			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
+		}
+		echo $testwarning.wpautop(wptexturize('Please click below button to continue payment'));
 	}
 
 	/**
@@ -592,6 +599,20 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		//get one time token first
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
 		
+		$testwarning = ''; 
+		
+		if (strpos($this->api_url, 'sandbox') !== false) {
+			//it is a test URL
+			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
+		}
+
+		$tokenerror = '';
+		if (strpos($onetimetoken, 'error') !== false) {
+			//get one time token return error, need info user to try again.
+			return $testwarning.'<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
+			<a href="'.wc_get_checkout_url().'"><input type="button" value="Back to Checkout"></a>';
+		}
+
 		wc_enqueue_js('
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
 				event.preventDefault();
@@ -635,9 +656,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				}
 			});
 		');
-		
 
-		return '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
+		return $testwarning.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
