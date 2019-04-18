@@ -168,7 +168,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function payment_fields() {
 		$testwarning = ''; 
-		error_log('payment_fields get api_url: '.$this->api_url);
+		
 		if (strpos($this->api_url, 'sandbox') !== false) {
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
@@ -600,9 +600,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
 		
 		$testwarning = ''; 
-		error_log('api_url is: '.$this->api_url);
+		
 		if (strpos($this->api_url, 'sandbox') !== false) {
-			error_log('api_url is test url');
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
 		}
