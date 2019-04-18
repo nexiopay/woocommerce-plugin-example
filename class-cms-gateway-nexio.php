@@ -168,7 +168,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function payment_fields() {
 		$testwarning = ''; 
-		
+		error_log('payment_fields get api_url: '.$this->api_url);
 		if (strpos($this->api_url, 'sandbox') !== false) {
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
