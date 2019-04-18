@@ -218,7 +218,57 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
         $this->order = wc_get_order($this->order->get_id());
        
-        $this->assertEquals('pending',$this->order->get_status());
+        $this->assertEquals('on-hold',$this->order->get_status());
+    }
+
+
+    public function test_checking_fail_data_1()
+    {
+        //mock callback data, Kount fail
+        $callbackdata = array(
+            'kountError' => true,
+            'merchantId' => '100039',
+            'kountResults' => array(
+                                        'result' => 'declined',
+                                        'data' => array(
+                                                            'ORDR' => $this->order->get_id(),
+                                                        ),
+                                    ),
+                            );
+        $data = json_decode(json_encode($callbackdata));
+        
+        $this->nexio_class->checking_fail_data($data);
+
+        $notes = $this->get_private_order_notes($this->order->get_id());
+        
+        $this->order = wc_get_order($this->order->get_id());
+        $this->assertEquals('failed',$this->order->get_status());;
+    }
+
+    public function test_checking_fail_data_2()
+    {
+        //mock callback data, gateway fail
+        $callbackdata = array(
+            'gatewayProcessingError' => true,
+            'message' => 'Invalid Transaction',
+            'merchantId' => '100039',
+            'gatewayResponse' => array(
+                                        'result' => 'Declined',
+                                        'status' => 'declined',
+                                        'type' => 'sale',
+                                        'refNum' => '3102447185',
+                                        'authCode' => '000000',
+                                        'batchId' => '409143',
+                                    ),
+                            );
+        $data = json_decode(json_encode($callbackdata));
+        
+        $this->nexio_class->checking_fail_data($data);
+
+        $notes = $this->get_private_order_notes($this->order->get_id());
+        
+        $this->order = wc_get_order($this->order->get_id());
+        $this->assertEquals('pending',$this->order->get_status());;
     }
 
 
@@ -277,7 +327,20 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 	 */
     public function test_payment_fields()
     {
+        //set api_url api.nexiopay.com
+        $this->nexio_class->api_url = 'https://api.nexiopay.com/';
+
         $expected = wpautop(wptexturize('Please click below button to continue payment'));
+        $this->expectOutputString($expected);
+        $this->nexio_class->payment_fields(); 
+    }
+
+    public function test_payment_fields_2()
+    {
+        //set api_url api.nexiopaysandbox.com
+        $this->nexio_class->api_url = 'https://api.nexiopaysandbox.com/';
+
+        $expected = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>'.wpautop(wptexturize('Please click below button to continue payment'));
         $this->expectOutputString($expected);
         $this->nexio_class->payment_fields(); 
     }
@@ -346,8 +409,11 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
              ->method("get_creditcard_token")
              ->willReturn('123456');
 
-        $onetimetoken = $this->nexio_class->get_iframe_src('123456');
         
+        
+        //set api.nexiopay.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopay.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
@@ -355,6 +421,87 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';
+        $return = trim(preg_replace('/\s\s+/', ' ', $return));
+        $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
+
+        $this->assertEquals($return,$return2);
+    }
+    
+    public function test_generate_nexio_form_2()
+	{
+        $order_id = $this->order->get_id();
+        
+        $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
+            ->setMethods(['get_creditcard_token'])
+            ->getMock();
+        $mockedObject->expects($this->any())
+             ->method("get_creditcard_token")
+             ->willReturn('error');
+
+        
+        
+        //set api.nexiopay.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopay.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
+
+
+        $return = $mockedObject->generate_nexio_form($order_id);
+        $return2 = '<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
+        <a href="'.wc_get_checkout_url().'"><input type="button" value="Back to Checkout"></a>';
+        $return = trim(preg_replace('/\s\s+/', ' ', $return));
+        $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
+
+        $this->assertEquals($return,$return2);
+    }
+
+    public function test_generate_nexio_form_3()
+	{
+        
+
+        $order_id = $this->order->get_id();
+        
+        $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
+            ->setMethods(['get_creditcard_token'])
+            ->getMock();
+        $mockedObject->expects($this->any())
+             ->method("get_creditcard_token")
+             ->willReturn('123456');
+        //set api.nexiopaysandbox.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
+        
+
+        $return = $mockedObject->generate_nexio_form($order_id);
+        $return2 = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>'.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
+		</form>
+		<div id="loader"></div>';
+        $return = trim(preg_replace('/\s\s+/', ' ', $return));
+        $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
+
+        $this->assertEquals($return,$return2);
+	}
+
+    public function test_generate_nexio_form_4()
+	{
+        $order_id = $this->order->get_id();
+        
+        $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
+            ->setMethods(['get_creditcard_token'])
+            ->getMock();
+        $mockedObject->expects($this->any())
+             ->method("get_creditcard_token")
+             ->willReturn('error');
+
+        //set api.nexiopaysandbox.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('error');
+        
+
+        $return = $mockedObject->generate_nexio_form($order_id);
+        $return2 = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>'.'<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
+        <a href="'.wc_get_checkout_url().'"><input type="button" value="Back to Checkout"></a>';
         $return = trim(preg_replace('/\s\s+/', ' ', $return));
         $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
 
