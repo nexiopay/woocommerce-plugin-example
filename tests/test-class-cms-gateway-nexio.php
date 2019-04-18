@@ -409,10 +409,11 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
              ->method("get_creditcard_token")
              ->willReturn('123456');
 
-        $onetimetoken = $mockedObject->get_iframe_src('123456');
+        
         
         //set api.nexiopay.com as api_url
         $mockedObject->api_url = 'https://api.nexiopay.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
@@ -437,10 +438,12 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
              ->method("get_creditcard_token")
              ->willReturn('error');
 
-        $onetimetoken = $mockedObject->get_iframe_src('123456');
+        
         
         //set api.nexiopay.com as api_url
         $mockedObject->api_url = 'https://api.nexiopay.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
+
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
@@ -453,8 +456,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 
     public function test_generate_nexio_form_3()
 	{
-        //set api.nexiopaysandbox.com as api_url
-        $this->nexio_class->api_url = 'https://api.nexiopaysandbox.com/';
+        
 
         $order_id = $this->order->get_id();
         
@@ -464,7 +466,8 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->expects($this->any())
              ->method("get_creditcard_token")
              ->willReturn('123456');
-
+        //set api.nexiopaysandbox.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
         
 
@@ -482,9 +485,6 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 
     public function test_generate_nexio_form_4()
 	{
-        //set api.nexiopaysandbox.com as api_url
-        $this->nexio_class->api_url = 'https://api.nexiopaysandbox.com/';
-
         $order_id = $this->order->get_id();
         
         $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
@@ -494,6 +494,8 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
              ->method("get_creditcard_token")
              ->willReturn('error');
 
+        //set api.nexiopaysandbox.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
         $onetimetoken = $mockedObject->get_iframe_src('error');
         
 
