@@ -129,7 +129,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
 		$this->authonly = $this->get_option('authonly');
-		$this->order_button_text = __( 'Continue to payment', 'cms-gateway-nexio' );
 
 		//get merchant share secret at the beginning
 		$this->shareSecret = $this->get_secret();
@@ -142,8 +141,35 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		add_action( 'woocommerce_api_callback', array( $this, 'nexio_checkout_return_failure_handler' ) );
 		add_action( 'woocommerce_thankyou_nexio', array( $this,'custom_content_thankyou'), 10,1);
 
+		//filter 
+		add_filter('woocommerce_order_button_html', array( $this,'custom_placeorder'));
+
+		//register css
+		wp_register_style( 'cms_checkout_spinner', plugins_url( 'assets/css/cms_spinner.css', __FILE__ ), array());
 	}
 	
+	/**
+	 * customize place order button in checkout page.
+	 *
+	 * @since 0.0.10
+	 */
+	public function custom_placeorder()
+	{
+		wc_enqueue_js('
+		checkout.addEventListener("submit", function placeorderclicked(event) {
+				document.getElementById("cms_checkout_message").innerHTML = "Requesting Nexio token... please wait";
+				document.getElementById("checkoutspinner").style.display = "block";
+			});
+		
+		');
+
+		// The text of the button
+		$order_button_text =__( 'Continue to payment', 'cms-gateway-nexio' );
+	
+		$button = '<input type="submit" class="button alt" name="woocommerce_checkout_place_order" id="place_order" value="' . esc_attr( $order_button_text ) . '" data-value="' . esc_attr( $order_button_text ) . '" />';
+		return $button;
+	}
+
 	/**
 	 * Show customized message in order received page after payment success.
 	 *
@@ -173,7 +199,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
 		}
-		echo $testwarning.wpautop(wptexturize('Please click below button to continue payment'));
+
+		wp_enqueue_style( 'cms_checkout_spinner' );	
+		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
 	}
 
 	/**
@@ -613,6 +641,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			<a href="'.wc_get_checkout_url().'"><input type="button" value="Back to Checkout"></a>';
 		}
 
+		error_log('The order received URL is: '.$this->get_return_url( $order ));
+
 		wc_enqueue_js('
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
 				event.preventDefault();
@@ -627,19 +657,28 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("loader").style.display = "none";
 					}
 					if (event.data.event === "processed") {
-						if("'.$this->fraud.'" === "yes")
-						{
-							if(event.data.data.kountResponse.status === "review")
+						try{
+							if("'.$this->fraud.'" === "yes")
 							{
-								window.document.getElementById("p1").innerHTML = "";
-								window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( wc_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
-								return;
+								if(event.data.data.kountResponse.status === "review")
+								{
+									window.document.getElementById("p1").innerHTML = "";
+									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( wc_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
+									return;
+								}
 							}
+						}
+						catch(e)
+						{
+							window.document.getElementById("p1").innerHTML = "";
+							var jsonStr = JSON.stringify(event.data.data, null, 1);
+							window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction is approved, but fraud check gets problem</p><p>Please contact merchant to check payment status</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+							return;
 						}
 							
 						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon...</p>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
 						}, 5000);
