@@ -195,11 +195,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function payment_fields() {
 		$testwarning = ''; 
 		
+		/*
 		if (strpos($this->api_url, 'sandbox') !== false) {
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
 		}
-
+		*/
 		wp_enqueue_style( 'cms_checkout_spinner' );	
 		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
 	}
@@ -629,10 +630,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 		$testwarning = ''; 
 		
+		/*
 		if (strpos($this->api_url, 'sandbox') !== false) {
 			//it is a test URL
 			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
-		}
+		}*/
 
 		$tokenerror = '';
 		if (strpos($onetimetoken, 'error') !== false) {
@@ -663,7 +665,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 								if(event.data.data.kountResponse.status === "review")
 								{
 									window.document.getElementById("p1").innerHTML = "";
-									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your payment is Authorized</p><p>Wait merchant to approve it.</p><a href=\"'.get_permalink( wc_get_page_id( 'shop' ) ).'\"><input type=\"button\" value=\"Back to Shop\"/></a>";
+									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction is completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 									return;
 								}
 							}
