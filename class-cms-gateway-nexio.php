@@ -157,7 +157,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	{
 		wc_enqueue_js('
 		checkout.addEventListener("submit", function placeorderclicked(event) {
-				document.getElementById("cms_checkout_message").innerHTML = "Requesting Nexio token... please wait";
+				document.getElementById("cms_checkout_message").innerHTML = "Processing...";
 				document.getElementById("checkoutspinner").style.display = "block";
 			});
 		
