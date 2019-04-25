@@ -146,6 +146,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//register css
 		wp_register_style( 'cms_checkout_spinner', plugins_url( 'assets/css/cms_spinner.css', __FILE__ ), array());
+		wp_register_style( 'cms_orderpay', plugins_url( 'assets/css/cms_orderpay.css', __FILE__ ), array());
 	}
 	
 	/**
@@ -195,14 +196,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function payment_fields() {
 		$testwarning = ''; 
 		
-		/*
-		if (strpos($this->api_url, 'sandbox') !== false) {
-			//it is a test URL
-			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
-		}
-		*/
 		wp_enqueue_style( 'cms_checkout_spinner' );	
-		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
+		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div id="checkoutspinner" class="loader" style="display: none;"></div>';
 	}
 
 	/**
@@ -629,12 +624,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
 		
 		$testwarning = ''; 
-		
-		/*
-		if (strpos($this->api_url, 'sandbox') !== false) {
-			//it is a test URL
-			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
-		}*/
 
 		$tokenerror = '';
 		if (strpos($onetimetoken, 'error') !== false) {
@@ -698,8 +687,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			});
 		');
 
+		wp_enqueue_style( 'cms_orderpay' );	
+
 		return $testwarning.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';

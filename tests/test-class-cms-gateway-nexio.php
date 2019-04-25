@@ -330,7 +330,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         //set api_url api.nexiopay.com
         $this->nexio_class->api_url = 'https://api.nexiopay.com/';
 
-        $expected = '<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
+        $expected = '<p id="cms_checkout_message">Please click below button to continue payment</p><div id="checkoutspinner" class="loader" style="display: none;"></div>';
         $this->expectOutputString($expected);
         $this->nexio_class->payment_fields(); 
     }
@@ -340,7 +340,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         //set api_url api.nexiopaysandbox.com
         $this->nexio_class->api_url = 'https://api.nexiopaysandbox.com/';
 
-        $expected = '<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
+        $expected = '<p id="cms_checkout_message">Please click below button to continue payment</p><div id="checkoutspinner" class="loader" style="display: none;"></div>';
         $this->expectOutputString($expected);
         $this->nexio_class->payment_fields(); 
     }
