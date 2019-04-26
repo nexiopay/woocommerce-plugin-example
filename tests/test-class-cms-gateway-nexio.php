@@ -417,7 +417,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';
@@ -473,7 +473,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';
