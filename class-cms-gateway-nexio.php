@@ -640,7 +640,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				iframe1.contentWindow.postMessage("posted", "'.$onetimetoken.'");
 				return false;
 			});
-
 			window.addEventListener("message", function messageListener(event) {
 				if (event.origin === "'.rtrim($this->api_url, '/\\').'") {
 					if (event.data.event === "loaded") {
@@ -654,7 +653,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 								if(event.data.data.kountResponse.status === "review")
 								{
 									window.document.getElementById("p1").innerHTML = "";
-									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction is completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 									return;
 								}
 							}
@@ -663,24 +662,23 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						{
 							window.document.getElementById("p1").innerHTML = "";
 							var jsonStr = JSON.stringify(event.data.data, null, 1);
-							window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction is approved, but fraud check gets problem</p><p>Please contact merchant to check payment status</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+							window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 							return;
 						}
 							
 						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
 						}, 5000);
-
 						
 					}
 					if (event.data.event === "error"){
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>Response from Nexio: " + msg + "</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
 						
 					}
 				}
