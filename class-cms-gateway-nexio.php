@@ -146,6 +146,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//register css
 		wp_register_style( 'cms_checkout_spinner', plugins_url( 'assets/css/cms_spinner.css', __FILE__ ), array());
+		wp_register_style( 'cms_orderpay', plugins_url( 'assets/css/cms_orderpay.css', __FILE__ ), array());
 	}
 	
 	/**
@@ -157,7 +158,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	{
 		wc_enqueue_js('
 		checkout.addEventListener("submit", function placeorderclicked(event) {
-				document.getElementById("cms_checkout_message").innerHTML = "Requesting Nexio token... please wait";
+				document.getElementById("cms_checkout_message").innerHTML = "Processing...";
 				document.getElementById("checkoutspinner").style.display = "block";
 			});
 		
@@ -195,14 +196,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	public function payment_fields() {
 		$testwarning = ''; 
 		
-		/*
-		if (strpos($this->api_url, 'sandbox') !== false) {
-			//it is a test URL
-			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
-		}
-		*/
 		wp_enqueue_style( 'cms_checkout_spinner' );	
-		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div style="text-align: center"><div id="checkoutspinner" class="loader" style="display: none;"></div></div>';
+		echo $testwarning.'<p id="cms_checkout_message">Please click below button to continue payment</p><div id="checkoutspinner" class="loader" style="display: none;"></div>';
 	}
 
 	/**
@@ -629,12 +624,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$onetimetoken = $this->get_iframe_src($this->get_creditcard_token($order_id));
 		
 		$testwarning = ''; 
-		
-		/*
-		if (strpos($this->api_url, 'sandbox') !== false) {
-			//it is a test URL
-			$testwarning = '<p id="testwarn1" style="color:red;">!!!YOU ARE IN TEST MODE!!!</p>';
-		}*/
 
 		$tokenerror = '';
 		if (strpos($onetimetoken, 'error') !== false) {
@@ -651,7 +640,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				iframe1.contentWindow.postMessage("posted", "'.$onetimetoken.'");
 				return false;
 			});
-
 			window.addEventListener("message", function messageListener(event) {
 				if (event.origin === "'.rtrim($this->api_url, '/\\').'") {
 					if (event.data.event === "loaded") {
@@ -665,7 +653,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 								if(event.data.data.kountResponse.status === "review")
 								{
 									window.document.getElementById("p1").innerHTML = "";
-									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction is completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 									return;
 								}
 							}
@@ -674,32 +662,33 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						{
 							window.document.getElementById("p1").innerHTML = "";
 							var jsonStr = JSON.stringify(event.data.data, null, 1);
-							window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction is approved, but fraud check gets problem</p><p>Please contact merchant to check payment status</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+							window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 							return;
 						}
 							
 						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Successfully Processed Credit Card Transaction</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 						setTimeout(function () {
 							window.location = "'.$this->get_return_url( $order ).'";
 						}, 5000);
-
 						
 					}
 					if (event.data.event === "error"){
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>Response from Nexio: " + msg + "</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
 						
 					}
 				}
 			});
 		');
 
+		wp_enqueue_style( 'cms_orderpay' );	
+
 		return $testwarning.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" id="iframe1" src="'.$onetimetoken.'" style="border:0" height="750px"></iframe>
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';
