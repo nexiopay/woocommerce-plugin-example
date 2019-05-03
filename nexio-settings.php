@@ -64,7 +64,7 @@ return apply_filters(
 			'label'       => __( 'CSS file location', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'CSS file location', 'cms-gateway-nexio' ),
-			'default'     => 'https://tester.nexiopaydev.com/ecom-example1.css',
+			'default'     => '',
 			'desc_tip'    => true,
 		),
 		'customtext_url'                       	=> array(
