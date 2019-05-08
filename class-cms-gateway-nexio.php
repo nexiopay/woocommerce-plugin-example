@@ -87,6 +87,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public $authonly;
 
+	/**
+	 * signatureverify
+	 *
+	 * @var bool
+	 */
+	public $signatureverify;
 
 	/**
 	 * shareSecret
@@ -102,6 +108,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * Constructor
 	 */
 	public function __construct() {
+		error_log("plugin __construct is called!");
 		$this->id             = 'nexio';
 		$this->method_title   = __( 'Nexio', 'cms-gateway-nexio' );
 		/* translators: 1) link to nexio register page 2) link to nexio api keys page */
@@ -129,9 +136,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
 		$this->authonly = $this->get_option('authonly');
-
+		$this->signatureverify = $this->get_option('signatureverify');
+		$this->shareSecret = $this->get_option('shareSecret');
 		//get merchant share secret at the beginning
-		$this->shareSecret = $this->get_secret();
+		//change to update secret
+		//$this->shareSecret = $this->update_secret();
+		$this->debug_to_console('current shareSecret is: '.$this->shareSecret);
+		$this->Load_secret();
 
 		
 		// Hooks.
@@ -358,6 +369,28 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * get or update share secret of merchant
+	 *
+	 * @since 0.0.12
+	 */
+	public function Load_secret()
+	{
+		//only get secret when secret is not set
+		if(empty($this->shareSecret) || $this->shareSecret === "error")
+		{
+			$this->shareSecret = $this->get_secret();
+
+			if($this->shareSecret === "error")
+			{
+				$this->shareSecret = $this->update_secret();
+			}
+
+			//update
+			$this->update_option('shareSecret',$this->shareSecret,'yes');
+		}
+	}
+
+	/**
 	 * update_secret
 	 * update the share secret of merchant
 	 * @since 0.0.5
@@ -387,7 +420,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			
-			
+			$this->debug_to_console('update secret response: '.$result);
 
 			if ($error) {
 				return "error";
@@ -398,13 +431,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					return "error";
 				}
 				
-				$secert = json_decode($result)->secret;
-				error_log('update secert: '.$secert);
-				return $secert;
+				$secret = json_decode($result)->secret;
+				error_log('update secret: '.$secret);
+				return $secret;
 			}
 		} catch (Exception $e) {
 			
-			error_log("update secert failed:".$e->getMessage(),0);
+			error_log("update secret failed:".$e->getMessage(),0);
+			$this->debug_to_console("update secret failed:".$e->getMessage());
 			return "error";
 		}
 	}
@@ -439,8 +473,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			
-			error_log('get secert response: '.$result);
-
+			error_log('get secret response: '.$result);
+			$this->debug_to_console('get secret response: '.$result);
 			if ($error) {
 				
 				return "error";
@@ -451,13 +485,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					return "error";
 				}
 				
-				$secert = json_decode($result)->secret;
-				error_log('get secert: '.$secert);
-				return $secert;
+				$secret = json_decode($result)->secret;
+				error_log('get secret: '.$secret);
+				$this->debug_to_console('get secret: '.$secret);
+				return $secret;
 			}
 		} catch (Exception $e) {
 			
-			error_log("Get secert failed:".$e->getMessage(),0);
+			error_log("Get secret failed:".$e->getMessage(),0);
 			return "error";
 		}
 	}
@@ -472,6 +507,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	private function check_signature($nexiosignature,$rawpayload)
 	{
+		if($this->signatureverify === 'no')
+		{
+			error_log('bypass signature verification');
+			return true;
+		}
+
 		$firstpos = strrpos($nexiosignature,'t=');
 		$commonpos = strrpos($nexiosignature, ',');
 		$secondpos = strrpos($nexiosignature,'v1=');
@@ -484,14 +525,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		error_log('shareSecret: '.$this->shareSecret);
 		
-		if($this->shareSecret === 'error' || is_null($this->shareSecret))
+		if($this->shareSecret === 'error' || empty($this->shareSecret))
 		{
 			//try to get shareSecret again
 			error_log('shareSecret is not set, get it first');
 			$this->shareSecret = $this->get_secret();
-			if($this->shareSecret === 'error' || is_null($this->shareSecret))
+			if($this->shareSecret === 'error' || empty($this->shareSecret))
 			{			
-				error_log('shareSecret is not setted failed');
+				error_log('shareSecret is not setted, verify failed');
 				return false;
 			}
 		}
@@ -626,6 +667,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$testwarning = ''; 
 
 		$tokenerror = '';
+		$this->debug_to_console('iFrame URL: '.$onetimetoken);
 		if (strpos($onetimetoken, 'error') !== false) {
 			//get one time token return error, need info user to try again.
 			return $testwarning.'<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
@@ -707,6 +749,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		//1. get data array first
 			//1.1 get customer array first.
 		$customer = array(
+			//todo need change it to $order->get_order_number() once Nexio can send customfields back in callback webhook
 			'orderNumber' => $order_id,
 			'firstName' => $order->get_billing_first_name(),
 			'lastName' => $order->get_billing_last_name(),
@@ -745,7 +788,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'hideBilling' => ($this->hidebilling === 'yes'?true:false),
 		);
 		
-		if(!is_null($this->customtext_url))
+		if(!empty($this->customtext_url))
 		{
 			$uiOptions['customTextUrl'] = $this->customtext_url;
 		}
@@ -757,6 +800,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//5. TODO cart
 
+		//6. custom fields
+		$customfields = array(
+			//todo need change it to $order_id once Nexio can send customfields back in callback webhook
+			'orderID' => $order->get_order_number(),
+		);
 
 		//build the whole array
 		$request = array(
@@ -765,6 +813,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'uiOptions' => $uiOptions,
 			'card' => $card,
 			'isAuthOnly' => ($this->authonly === 'yes'?true:false),
+			'customFields' => $customfields,
 		);
 
 		//convert to json
@@ -828,13 +877,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			error_log('getonetimetoken response: '.$result);
+			$this->debug_to_console('getonetimetoken response: '.$result);
 			if ($error) {
 				
 				return "error";
 			} else {
 				
 				$onetimetoken = json_decode($result)->token;
-				if(json_decode($result)->error)
+				if(json_decode($result)->error || empty(json_decode($result)->token))
 				{
 					
 					return "error";
@@ -845,7 +895,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return json_decode($result)->token;
 			}
 		} catch (Exception $e) {
-			
+			$this->debug_to_console("Get One Time Token error:".$e->getMessage());
 			error_log("Get One Time Token:".$e->getMessage(),0);
 			return "error";
 		}
@@ -885,5 +935,19 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'redirect' => $order->get_checkout_payment_url(true),
 		);
 		
+	}
+
+	/**
+	 * Chrome console log output
+	 *
+	 * @since 0.0.12
+	 * 
+	 */
+	function debug_to_console( $data ) {
+		$output = $data;
+		if ( is_array( $output ) )
+			$output = implode( ',', $output);
+	
+		echo "<script>console.log( 'Nexio debug: " . $output . "' );</script>";
 	}
 }

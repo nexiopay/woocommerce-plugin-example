@@ -38,6 +38,7 @@ Example:
     - **Password**: Your Nexio password
         _(If you have questions or if you need a Nexio username and password, please contact integrations@nexiopay.com)_
     - **Merchant Id**: The merchant id of your Nexio account
+    - **Share Secret**: The share secret of merchant, it is used for signatrue verification
     - **CSS**: The URL where your CSS file is hosted (required for custom CSS).
     - **Custom Text File**: The URL where your custom text file is hosted.
     - **Fraud Check**: Enable fraud check through Kount.
@@ -46,6 +47,7 @@ Example:
     - **Hide CVC**: Hide CVC.
     - **Hide Billing**: Hide billing info.
     - **Auth Only**: Make the transaction auth only.
+    - **Signature Verify**: Enable or disable signature verification.
 9. Scroll to the bottom of the page and click ‘Save changes’.
 Example:
 ![Payment methods settings example](screenshots/paymentMethodSettings.png)
@@ -99,3 +101,4 @@ Example:
 * 0.0.9 - 2019-04-18
 * 0.0.10 - 2019-04-23
 * 0.0.11 - 2019-05-04
+* 0.0.12 - 2019-05-08
