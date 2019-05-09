@@ -139,9 +139,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->signatureverify = $this->get_option('signatureverify');
 		$this->shareSecret = $this->get_option('shareSecret');
 		//get merchant share secret at the beginning
-		//change to update secret
-		//$this->shareSecret = $this->update_secret();
-		$this->debug_to_console('current shareSecret is: '.$this->shareSecret);
+		
 		$this->Load_secret();
 
 		
@@ -292,9 +290,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					else
 					{
 						//fraud is set to enable but no kount response, something wrong, update status to failed,acutally it should not happen, since it comes from payment success callback URL
-						$order->update_status('failed', sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
-						
-						error_log('Fraud check is selected but no kount response or status, please check with Nexio!',0);
+						//only set order status to failed when get clear decline message from kount, so in this case, just ignore the problem and complete the order
+						//$order->update_status('failed', sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						$this->complete_order($order_id, $callbackdata, true);
+
+						error_log('Fraud check is selected but no kount response or status, order is completed anyway',0);
 						return;
 					}
 				}
@@ -419,8 +419,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$result = curl_exec($ch);
 			$error = curl_error($ch);
 			curl_close($ch);
-			
-			$this->debug_to_console('update secret response: '.$result);
 
 			if ($error) {
 				return "error";
@@ -438,7 +436,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		} catch (Exception $e) {
 			
 			error_log("update secret failed:".$e->getMessage(),0);
-			$this->debug_to_console("update secret failed:".$e->getMessage());
 			return "error";
 		}
 	}
@@ -474,7 +471,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			curl_close($ch);
 			
 			error_log('get secret response: '.$result);
-			$this->debug_to_console('get secret response: '.$result);
 			if ($error) {
 				
 				return "error";
@@ -487,7 +483,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				
 				$secret = json_decode($result)->secret;
 				error_log('get secret: '.$secret);
-				$this->debug_to_console('get secret: '.$secret);
 				return $secret;
 			}
 		} catch (Exception $e) {
@@ -667,7 +662,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$testwarning = ''; 
 
 		$tokenerror = '';
-		$this->debug_to_console('iFrame URL: '.$onetimetoken);
 		if (strpos($onetimetoken, 'error') !== false) {
 			//get one time token return error, need info user to try again.
 			return $testwarning.'<p id="tokenerror" class="woocommerce-error"> Fail to generate payment form, please go back to checkout page and retry!</p>
@@ -729,9 +723,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		wp_enqueue_style( 'cms_orderpay' );	
 
-		return $testwarning.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
+		return $testwarning.'<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
 		</form>
 		<div id="loader"></div>';
 
@@ -749,6 +743,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		//1. get data array first
 			//1.1 get customer array first.
 		$customer = array(
+			//billing info
 			//todo need change it to $order->get_order_number() once Nexio can send customfields back in callback webhook
 			'orderNumber' => $order_id,
 			'firstName' => $order->get_billing_first_name(),
@@ -758,7 +753,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'billToCity' => $order->get_billing_city(),
 			'billToState' => $order->get_billing_state(),
 			'billToPostal' => $order->get_billing_postcode(),
-			'billToCountry' => $order->get_billing_country()
+			'billToCountry' => $order->get_billing_country(),
+			'email' => $order->get_billing_email(),
+			'phone' => $order->get_billing_phone(),
+
+			//shipping info
+			'shipToAddressOne' => $order->get_shipping_address_1(),
+			'shipToAddressTwo'  => $order->get_shipping_address_2(),
+			'shipToCity' => $order->get_shipping_city(),
+			'shipToState' => $order->get_shipping_state(),
+			'shipToPostalCode' => $order->get_shipping_postcode(),
+			'shipToCountry' => $order->get_shipping_country()
 		);
 
 			//1.2 build data array
@@ -775,7 +780,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'webhookUrl' => $this->get_callback_url(),
 			'webhookFailUrl' => $this->get_failure_callback_url(),
 			'checkFraud' => ($this->fraud === 'yes'?true:false),
-			'verboseResponse' => false
+			'verboseResponse' => false,
+			'saveCardToken' => false
 		);
 		
 
@@ -877,7 +883,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			error_log('getonetimetoken response: '.$result);
-			$this->debug_to_console('getonetimetoken response: '.$result);
 			if ($error) {
 				
 				return "error";
@@ -895,7 +900,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return json_decode($result)->token;
 			}
 		} catch (Exception $e) {
-			$this->debug_to_console("Get One Time Token error:".$e->getMessage());
 			error_log("Get One Time Token:".$e->getMessage(),0);
 			return "error";
 		}
@@ -937,17 +941,4 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 	}
 
-	/**
-	 * Chrome console log output
-	 *
-	 * @since 0.0.12
-	 * 
-	 */
-	function debug_to_console( $data ) {
-		$output = $data;
-		if ( is_array( $output ) )
-			$output = implode( ',', $output);
-	
-		echo "<script>console.log( 'Nexio debug: " . $output . "' );</script>";
-	}
 }

@@ -78,7 +78,7 @@ Example:
 4. Fill in card information and submit the transaction:
     a. Once the ‘Pay for order’ page has loaded you will see a Nexio payment form.
     b. Enter in the required fields.
-    c. Click the ‘Pay via Nexio’ button to submit the transaction.
+    c. Click the ‘Pay Now’ button to submit the transaction.
     d. If the transaction succeeds, you will see an ‘order received’ page, otherwise, it will return to checkout page for retry.
     Example:
     ![Pay for order example](screenshots/payForOrder.png)
@@ -102,3 +102,4 @@ Example:
 * 0.0.10 - 2019-04-23
 * 0.0.11 - 2019-05-04
 * 0.0.12 - 2019-05-08
+* 0.0.13 - 2019-05-09

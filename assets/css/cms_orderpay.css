@@ -1,4 +1,10 @@
 .cms_iframe {
     border:0;
     height: 750px;
+    width: 100%;
+}
+
+#cms_payment_form{
+    height: 900px; 
+    width: 400px;
 }
