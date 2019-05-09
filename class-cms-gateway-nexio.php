@@ -674,6 +674,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
 				event.preventDefault();
 				iframe1.contentWindow.postMessage("posted", "'.$onetimetoken.'");
+				document.getElementById("loader").style.display = "block";
 				return false;
 			});
 			window.addEventListener("message", function messageListener(event) {
@@ -682,7 +683,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("iframe1").style.display = "block";
 						window.document.getElementById("loader").style.display = "none";
 					}
+					if (event.data.event === "formValidations")
+					{
+						Object.keys(event.data.data).forEach(function(key){
+							if(event.data.data[key] == false)
+							{
+								window.document.getElementById("loader").style.display = "none";
+							}
+						})	
+					}
 					if (event.data.event === "processed") {
+						document.getElementById("loader").style.display = "none";
 						try{
 							if("'.$this->fraud.'" === "yes")
 							{
@@ -711,6 +722,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						
 					}
 					if (event.data.event === "error"){
+						document.getElementById("loader").style.display = "none";
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
@@ -724,10 +736,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		wp_enqueue_style( 'cms_orderpay' );	
 
 		return $testwarning.'<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
-		</form>
-		<div id="loader"></div>';
+		</form>';
 
 	}
 		
