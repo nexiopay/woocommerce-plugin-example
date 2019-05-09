@@ -38,6 +38,7 @@ Example:
     - **Password**: Your Nexio password
         _(If you have questions or if you need a Nexio username and password, please contact integrations@nexiopay.com)_
     - **Merchant Id**: The merchant id of your Nexio account
+    - **Share Secret**: The share secret of merchant, it is used for signatrue verification
     - **CSS**: The URL where your CSS file is hosted (required for custom CSS).
     - **Custom Text File**: The URL where your custom text file is hosted.
     - **Fraud Check**: Enable fraud check through Kount.
@@ -46,6 +47,7 @@ Example:
     - **Hide CVC**: Hide CVC.
     - **Hide Billing**: Hide billing info.
     - **Auth Only**: Make the transaction auth only.
+    - **Signature Verify**: Enable or disable signature verification.
 9. Scroll to the bottom of the page and click ‘Save changes’.
 Example:
 ![Payment methods settings example](screenshots/paymentMethodSettings.png)
@@ -76,7 +78,7 @@ Example:
 4. Fill in card information and submit the transaction:
     a. Once the ‘Pay for order’ page has loaded you will see a Nexio payment form.
     b. Enter in the required fields.
-    c. Click the ‘Pay via Nexio’ button to submit the transaction.
+    c. Click the ‘Pay Now’ button to submit the transaction.
     d. If the transaction succeeds, you will see an ‘order received’ page, otherwise, it will return to checkout page for retry.
     Example:
     ![Pay for order example](screenshots/payForOrder.png)
@@ -99,3 +101,5 @@ Example:
 * 0.0.9 - 2019-04-18
 * 0.0.10 - 2019-04-23
 * 0.0.11 - 2019-05-04
+* 0.0.12 - 2019-05-08
+* 0.0.13 - 2019-05-09

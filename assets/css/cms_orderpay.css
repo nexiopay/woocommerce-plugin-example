@@ -1,4 +1,34 @@
 .cms_iframe {
+    position:relative;
     border:0;
     height: 750px;
+    width: 100%;
 }
+
+#cms_payment_form{
+    height: 900px; 
+    width: 400px;
+}
+
+#loader {
+    position: relative;
+    top: -40px;
+    border: 1px solid #ccc;
+    border-top: 1px solid #000;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    animation: spin 1s linear infinite;
+    display: none;
+ }
+ 
+ 
+ 
+ @keyframes spin {
+     from {
+         transform:rotate(0deg);
+     }
+     to {
+         transform:rotate(360deg);
+     }
+ }

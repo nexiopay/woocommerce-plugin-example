@@ -87,6 +87,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public $authonly;
 
+	/**
+	 * signatureverify
+	 *
+	 * @var bool
+	 */
+	public $signatureverify;
 
 	/**
 	 * shareSecret
@@ -102,6 +108,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 * Constructor
 	 */
 	public function __construct() {
+		error_log("plugin __construct is called!");
 		$this->id             = 'nexio';
 		$this->method_title   = __( 'Nexio', 'cms-gateway-nexio' );
 		/* translators: 1) link to nexio register page 2) link to nexio api keys page */
@@ -129,9 +136,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->hidecvc = $this->get_option('hidecvc');
 		$this->hidebilling = $this->get_option('hidebilling');
 		$this->authonly = $this->get_option('authonly');
-
+		$this->signatureverify = $this->get_option('signatureverify');
+		$this->shareSecret = $this->get_option('shareSecret');
 		//get merchant share secret at the beginning
-		$this->shareSecret = $this->get_secret();
+		
+		$this->Load_secret();
 
 		
 		// Hooks.
@@ -281,9 +290,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					else
 					{
 						//fraud is set to enable but no kount response, something wrong, update status to failed,acutally it should not happen, since it comes from payment success callback URL
-						$order->update_status('failed', sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
-						
-						error_log('Fraud check is selected but no kount response or status, please check with Nexio!',0);
+						//only set order status to failed when get clear decline message from kount, so in this case, just ignore the problem and complete the order
+						//$order->update_status('failed', sprintf(__('fraud check is set to enable but no kount response. Please contact Nexio', 'cms-gateway-nexio')));
+						$this->complete_order($order_id, $callbackdata, true);
+
+						error_log('Fraud check is selected but no kount response or status, order is completed anyway',0);
 						return;
 					}
 				}
@@ -358,6 +369,28 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * get or update share secret of merchant
+	 *
+	 * @since 0.0.12
+	 */
+	public function Load_secret()
+	{
+		//only get secret when secret is not set
+		if(empty($this->shareSecret) || $this->shareSecret === "error")
+		{
+			$this->shareSecret = $this->get_secret();
+
+			if($this->shareSecret === "error")
+			{
+				$this->shareSecret = $this->update_secret();
+			}
+
+			//update
+			$this->update_option('shareSecret',$this->shareSecret,'yes');
+		}
+	}
+
+	/**
 	 * update_secret
 	 * update the share secret of merchant
 	 * @since 0.0.5
@@ -386,8 +419,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$result = curl_exec($ch);
 			$error = curl_error($ch);
 			curl_close($ch);
-			
-			
 
 			if ($error) {
 				return "error";
@@ -398,13 +429,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					return "error";
 				}
 				
-				$secert = json_decode($result)->secret;
-				error_log('update secert: '.$secert);
-				return $secert;
+				$secret = json_decode($result)->secret;
+				error_log('update secret: '.$secret);
+				return $secret;
 			}
 		} catch (Exception $e) {
 			
-			error_log("update secert failed:".$e->getMessage(),0);
+			error_log("update secret failed:".$e->getMessage(),0);
 			return "error";
 		}
 	}
@@ -439,8 +470,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$error = curl_error($ch);
 			curl_close($ch);
 			
-			error_log('get secert response: '.$result);
-
+			error_log('get secret response: '.$result);
 			if ($error) {
 				
 				return "error";
@@ -451,13 +481,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					return "error";
 				}
 				
-				$secert = json_decode($result)->secret;
-				error_log('get secert: '.$secert);
-				return $secert;
+				$secret = json_decode($result)->secret;
+				error_log('get secret: '.$secret);
+				return $secret;
 			}
 		} catch (Exception $e) {
 			
-			error_log("Get secert failed:".$e->getMessage(),0);
+			error_log("Get secret failed:".$e->getMessage(),0);
 			return "error";
 		}
 	}
@@ -472,6 +502,12 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	private function check_signature($nexiosignature,$rawpayload)
 	{
+		if($this->signatureverify === 'no')
+		{
+			error_log('bypass signature verification');
+			return true;
+		}
+
 		$firstpos = strrpos($nexiosignature,'t=');
 		$commonpos = strrpos($nexiosignature, ',');
 		$secondpos = strrpos($nexiosignature,'v1=');
@@ -484,14 +520,14 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		error_log('shareSecret: '.$this->shareSecret);
 		
-		if($this->shareSecret === 'error' || is_null($this->shareSecret))
+		if($this->shareSecret === 'error' || empty($this->shareSecret))
 		{
 			//try to get shareSecret again
 			error_log('shareSecret is not set, get it first');
 			$this->shareSecret = $this->get_secret();
-			if($this->shareSecret === 'error' || is_null($this->shareSecret))
+			if($this->shareSecret === 'error' || empty($this->shareSecret))
 			{			
-				error_log('shareSecret is not setted failed');
+				error_log('shareSecret is not setted, verify failed');
 				return false;
 			}
 		}
@@ -638,6 +674,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				cms_payment_form.addEventListener("submit", function processPayment(event) {
 				event.preventDefault();
 				iframe1.contentWindow.postMessage("posted", "'.$onetimetoken.'");
+				document.getElementById("loader").style.display = "block";
 				return false;
 			});
 			window.addEventListener("message", function messageListener(event) {
@@ -646,7 +683,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						window.document.getElementById("iframe1").style.display = "block";
 						window.document.getElementById("loader").style.display = "none";
 					}
+					if (event.data.event === "formValidations")
+					{
+						Object.keys(event.data.data).forEach(function(key){
+							if(event.data.data[key] == false)
+							{
+								window.document.getElementById("loader").style.display = "none";
+							}
+						})	
+					}
 					if (event.data.event === "processed") {
+						document.getElementById("loader").style.display = "none";
 						try{
 							if("'.$this->fraud.'" === "yes")
 							{
@@ -675,6 +722,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						
 					}
 					if (event.data.event === "error"){
+						document.getElementById("loader").style.display = "none";
 						var msg = event.data.data.message;
 						
 						window.document.getElementById("p1").innerHTML = "";
@@ -687,11 +735,10 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		wp_enqueue_style( 'cms_orderpay' );	
 
-		return $testwarning.'<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
-		</form>
-		<div id="loader"></div>';
+		return $testwarning.'<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
+		</form>';
 
 	}
 		
@@ -707,6 +754,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		//1. get data array first
 			//1.1 get customer array first.
 		$customer = array(
+			//billing info
+			//todo need change it to $order->get_order_number() once Nexio can send customfields back in callback webhook
 			'orderNumber' => $order_id,
 			'firstName' => $order->get_billing_first_name(),
 			'lastName' => $order->get_billing_last_name(),
@@ -715,7 +764,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'billToCity' => $order->get_billing_city(),
 			'billToState' => $order->get_billing_state(),
 			'billToPostal' => $order->get_billing_postcode(),
-			'billToCountry' => $order->get_billing_country()
+			'billToCountry' => $order->get_billing_country(),
+			'email' => $order->get_billing_email(),
+			'phone' => $order->get_billing_phone(),
+
+			//shipping info
+			'shipToAddressOne' => $order->get_shipping_address_1(),
+			'shipToAddressTwo'  => $order->get_shipping_address_2(),
+			'shipToCity' => $order->get_shipping_city(),
+			'shipToState' => $order->get_shipping_state(),
+			'shipToPostalCode' => $order->get_shipping_postcode(),
+			'shipToCountry' => $order->get_shipping_country()
 		);
 
 			//1.2 build data array
@@ -732,7 +791,8 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'webhookUrl' => $this->get_callback_url(),
 			'webhookFailUrl' => $this->get_failure_callback_url(),
 			'checkFraud' => ($this->fraud === 'yes'?true:false),
-			'verboseResponse' => false
+			'verboseResponse' => false,
+			'saveCardToken' => false
 		);
 		
 
@@ -745,7 +805,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'hideBilling' => ($this->hidebilling === 'yes'?true:false),
 		);
 		
-		if(!is_null($this->customtext_url))
+		if(!empty($this->customtext_url))
 		{
 			$uiOptions['customTextUrl'] = $this->customtext_url;
 		}
@@ -757,6 +817,11 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		//5. TODO cart
 
+		//6. custom fields
+		$customfields = array(
+			//todo need change it to $order_id once Nexio can send customfields back in callback webhook
+			'orderID' => $order->get_order_number(),
+		);
 
 		//build the whole array
 		$request = array(
@@ -765,6 +830,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'uiOptions' => $uiOptions,
 			'card' => $card,
 			'isAuthOnly' => ($this->authonly === 'yes'?true:false),
+			'customFields' => $customfields,
 		);
 
 		//convert to json
@@ -834,7 +900,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			} else {
 				
 				$onetimetoken = json_decode($result)->token;
-				if(json_decode($result)->error)
+				if(json_decode($result)->error || empty(json_decode($result)->token))
 				{
 					
 					return "error";
@@ -845,7 +911,6 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return json_decode($result)->token;
 			}
 		} catch (Exception $e) {
-			
 			error_log("Get One Time Token:".$e->getMessage(),0);
 			return "error";
 		}
@@ -886,4 +951,5 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		);
 		
 	}
+
 }

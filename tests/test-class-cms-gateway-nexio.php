@@ -416,11 +416,10 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $onetimetoken = $mockedObject->get_iframe_src('123456');
 
         $return = $mockedObject->generate_nexio_form($order_id);
-        $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
-		</form>
-		<div id="loader"></div>';
+        $return2 = '<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
+		</form>';
         $return = trim(preg_replace('/\s\s+/', ' ', $return));
         $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
 
@@ -472,11 +471,10 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
 
         $return = $mockedObject->generate_nexio_form($order_id);
-        $return2 = '<p id="p1">Thank you for your order, please input your payment information in blow form and click the button to submit transaction.</p><form id="cms_payment_form" height="900px" width="400px" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay via Nexio', 'cms-gateway-nexio').'" />
-		</form>
-		<div id="loader"></div>';
+        $return2 = '<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
+		</form>';
         $return = trim(preg_replace('/\s\s+/', ' ', $return));
         $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
 

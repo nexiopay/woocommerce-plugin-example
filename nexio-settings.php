@@ -59,6 +59,14 @@ return apply_filters(
 			'default'     => '',
 			'desc_tip'    => true,
 		),
+		'shareSecret'                       => array(
+			'title'       => __( 'Shared Secret', 'cms-gateway-nexio' ),
+			'label'       => __( 'Shared Secret of merchant', 'cms-gateway-nexio' ),
+			'type'        => 'password',
+			'description' => __( 'Shared Secret of merchant', 'cms-gateway-nexio' ),
+			'default'     => '',
+			'desc_tip'    => true,
+		),
 		'css'                       	=> array(
 			'title'       => __( 'CSS', 'cms-gateway-nexio' ),
 			'label'       => __( 'CSS file location', 'cms-gateway-nexio' ),
@@ -109,6 +117,13 @@ return apply_filters(
 			'type'        => 'checkbox',
 			'description' => '',
 			'default'     => 'no',
+		),
+		'signatureverify'                       => array(
+			'title'       => __( 'Verify Signature', 'cms-gateway-nexio' ),
+			'label'       => __( 'Verify Signature', 'cms-gateway-nexio' ),
+			'type'        => 'checkbox',
+			'description' => '',
+			'default'     => 'yes',
 		),
 	)
 );
