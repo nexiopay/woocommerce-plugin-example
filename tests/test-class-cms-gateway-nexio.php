@@ -523,7 +523,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $onetimetoken = $mockedObject->get_iframe_src('123456');
 
         
-
+        $GLOBALS['is_IE'] = 1;
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
@@ -551,6 +551,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
         
+        $GLOBALS['is_IE'] = 1 ;
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
