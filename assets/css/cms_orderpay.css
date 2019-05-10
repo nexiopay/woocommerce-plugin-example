@@ -3,6 +3,7 @@
     border:0;
     height: 750px;
     width: 100%;
+    display: none;
 }
 
 #cms_payment_form{

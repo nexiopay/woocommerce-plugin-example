@@ -8,7 +8,7 @@ return apply_filters(
 	array(
 		'enabled'                       => array(
 			'title'       => __( 'Enable/Disable', 'cms-gateway-nexio' ),
-			'label'       => __( 'Enable nexio', 'cms-gateway-nexio' ),
+			'label'       => __( 'Enable Nexio', 'cms-gateway-nexio' ),
 			'type'        => 'checkbox',
 			'description' => '',
 			'default'     => 'no',
@@ -17,14 +17,14 @@ return apply_filters(
 			'title'       => __( 'Title', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'This controls the title which the user sees during checkout.', 'cms-gateway-nexio' ),
-			'default'     => __( 'Credit Card(Nexio)', 'cms-gateway-nexio' ),
+			'default'     => __( 'Credit Card', 'cms-gateway-nexio' ),
 			'desc_tip'    => true,
 		),
 		'description'                   => array(
 			'title'       => __( 'Description', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'This controls the description which the user sees during checkout.', 'cms-gateway-nexio' ),
-			'default'     => __( 'Pay with your credit card via nexio.', 'cms-gateway-nexio' ),
+			'default'     => __( 'Pay with your credit card.', 'cms-gateway-nexio' ),
 			'desc_tip'    => true,
 		),
 		'api_url'                       => array(
@@ -32,7 +32,7 @@ return apply_filters(
 			'label'       => __( 'URL of API server', 'cms-gateway-nexio' ),
 			'type'        => 'text',
 			'description' => __( 'The URL of Nexio API server', 'cms-gateway-nexio' ),
-			'default'     => 'https://api.nexiopaysandbox.com/',
+			'default'     => 'https://api.nexiopay.com/',
 			'desc_tip'    => true,
 		),
 		'user_name'                       => array(
@@ -47,7 +47,7 @@ return apply_filters(
 			'title'       => __( 'Password', 'cms-gateway-nexio' ),
 			'label'       => __( 'Password of Nexio account', 'cms-gateway-nexio' ),
 			'type'        => 'password',
-			'description' => __( 'Passwrod of your Nexio account', 'cms-gateway-nexio' ),
+			'description' => __( 'Password of your Nexio account', 'cms-gateway-nexio' ),
 			'default'     => '',
 			'desc_tip'    => true,
 		),
@@ -88,7 +88,7 @@ return apply_filters(
 			'label'       => __( 'Enable/Disable fraud check', 'cms-gateway-nexio' ),
 			'type'        => 'checkbox',
 			'description' => '',
-			'default'     => 'yes',
+			'default'     => 'no',
 		),
 		'requirecvc'                       => array(
 			'title'       => __( 'Require CVC', 'cms-gateway-nexio' ),
@@ -123,7 +123,7 @@ return apply_filters(
 			'label'       => __( 'Verify Signature', 'cms-gateway-nexio' ),
 			'type'        => 'checkbox',
 			'description' => '',
-			'default'     => 'yes',
+			'default'     => 'no',
 		),
 	)
 );
