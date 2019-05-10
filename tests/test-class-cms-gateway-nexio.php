@@ -505,6 +505,61 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $this->assertEquals($return,$return2);
 	}
 
+    public function test_generate_nexio_form_5()
+	{
+        $order_id = $this->order->get_id();
+        
+        $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
+            ->setMethods(['get_creditcard_token'])
+            ->getMock();
+        $mockedObject->expects($this->any())
+             ->method("get_creditcard_token")
+             ->willReturn('123456');
+
+        
+        
+        //set api.nexiopay.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopay.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
+
+        
+
+        $return = $mockedObject->generate_nexio_form($order_id);
+        $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+		</form>';
+        $return = trim(preg_replace('/\s\s+/', ' ', $return));
+        $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
+
+        $this->assertEquals($return,$return2);
+    }
+
+
+    public function test_generate_nexio_form_6()
+	{
+        
+
+        $order_id = $this->order->get_id();
+        
+        $mockedObject = $this->getMockBuilder(CMS_Gateway_Nexio::class)
+            ->setMethods(['get_creditcard_token'])
+            ->getMock();
+        $mockedObject->expects($this->any())
+             ->method("get_creditcard_token")
+             ->willReturn('123456');
+        //set api.nexiopaysandbox.com as api_url
+        $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
+        $onetimetoken = $mockedObject->get_iframe_src('123456');
+        
+        $return = $mockedObject->generate_nexio_form($order_id);
+        $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+		</form>';
+        $return = trim(preg_replace('/\s\s+/', ' ', $return));
+        $return2 = trim(preg_replace('/\s\s+/', ' ', $return2));
+
+        $this->assertEquals($return,$return2);
+	}
 
     //get order notes
     function get_private_order_notes( $order_id){
