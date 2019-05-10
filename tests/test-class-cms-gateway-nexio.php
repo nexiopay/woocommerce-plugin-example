@@ -293,7 +293,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 	{
         $order_id = $this->order->get_id();
         //now, the order status is pending
-        $expected = '<p>'.__('Payment is successfully processed by Nexio, but your order status is not processing, please check!').'</p>';
+        $expected = '<p>'.__('Payment was successfully processed, but your order status is not processing, please check!').'</p>';
         $this->expectOutputString($expected);
         $this->nexio_class->custom_content_thankyou($order_id);   
     }
@@ -316,7 +316,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
         $return = $this->nexio_class->complete_order($order_id,$data,false);
         //now, the order status is pending
-        $expected = '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
+        $expected = '<p>'.__('Payment is successfully processed!').'</p>';
         $this->expectOutputString($expected);
         $this->nexio_class->custom_content_thankyou($order_id);   
     }
@@ -415,6 +415,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->api_url = 'https://api.nexiopay.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
 
+        $GLOBALS['is_IE'] = '';
 
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
