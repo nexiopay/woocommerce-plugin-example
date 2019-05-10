@@ -707,7 +707,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		wp_enqueue_style( 'cms_orderpay' );	
 	
-		if(empty($GLOBALS['is_IE']))
+		if(!empty($GLOBALS['is_IE']))
 		{
 			return $testwarning.'<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 			<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>

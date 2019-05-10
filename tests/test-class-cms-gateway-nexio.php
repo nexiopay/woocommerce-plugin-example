@@ -178,12 +178,9 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
 
         $notes = $this->get_private_order_notes($this->order->get_id());
 
-        //since payment is not completed, nothing should happen.
-        $this->assertNull($notes);
-        
+        //payment should complete too
         $this->order = wc_get_order($this->order->get_id());
-        
-        $this->assertEquals('pending',$this->order->get_status());
+        $this->assertEquals('processing',$this->order->get_status());
     }
 
     public function test_checking_success_data_4()
@@ -316,7 +313,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
         $return = $this->nexio_class->complete_order($order_id,$data,false);
         //now, the order status is pending
-        $expected = '<p>'.__('Payment is successfully processed!').'</p>';
+        $expected = '<p>'.__('Payment was successfully processed!').'</p>';
         $this->expectOutputString($expected);
         $this->nexio_class->custom_content_thankyou($order_id);   
     }
@@ -471,6 +468,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
         
+        $GLOBALS['is_IE'] = '';
         $return = $mockedObject->generate_nexio_form($order_id);
         $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
