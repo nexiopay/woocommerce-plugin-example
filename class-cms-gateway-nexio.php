@@ -112,7 +112,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->id             = 'nexio';
 		$this->method_title   = __( 'Nexio', 'cms-gateway-nexio' );
 		/* translators: 1) link to nexio register page 2) link to nexio api keys page */
-		$this->method_description = sprintf( __( 'Nexio works by adding payment fields on the checkout and then sending the details to Nexio for verification. <a href="%1$s" target="_blank">Connect us</a> for a Nexio account, and get your Nexio account token</a>.', 'cms-gateway-nexio' ), 'https://nexiopay.com/contact/');
+		$this->method_description = sprintf( __( 'Nexio works by adding payment fields on the checkout and then sending the details to Nexio for verification. <a href="%1$s" target="_blank">Contact Nexio</a> for an account.</a>.', 'cms-gateway-nexio' ), 'https://nexiopay.com/contact/');
 		$this->has_fields         = false;
 
 		// Load the form fields.
@@ -167,7 +167,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	{
 		wc_enqueue_js('
 		checkout.addEventListener("submit", function placeorderclicked(event) {
-				document.getElementById("cms_checkout_message").innerHTML = "Processing...";
+				document.getElementById("cms_checkout_message").innerHTML = "Establishing secure connection to payment engine...";
 				document.getElementById("checkoutspinner").style.display = "block";
 			});
 		
@@ -190,9 +190,9 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 
 		$orderstat = $order->get_status();
 		if($orderstat == 'processing')
-			echo '<p>'.__('Payment is successfully processed by Nexio!').'</p>';
+			echo '<p>'.__('Payment was successfully processed!').'</p>';
 		else
-			echo '<p>'.__('Payment is successfully processed by Nexio, but your order status is not processing, please check!').'</p>';
+			echo '<p>'.__('Payment was successfully processed, but your order status is not processing, please check!').'</p>';
 	}
 
 	/**
@@ -245,15 +245,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			$order    = wc_get_order( $order_id );
 
 			try
-			{
-				//check gateway response.
-				if($callbackdata->gatewayResponse->result !== 'Approved')
-				{
-					//although succes webhook is called, but the result in gateway response is not 'Approved', something wrong, do nothing
-					error_log('Success webhook is called, but gateway response is not approved, please check with Nexio!',0);
-					return;
-				}
-				
+			{				
 				if($this->fraud === 'yes')
 				{
 					//need check kount response first
@@ -694,26 +686,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 					}
 					if (event.data.event === "processed") {
 						document.getElementById("loader").style.display = "none";
-						try{
-							if("'.$this->fraud.'" === "yes")
-							{
-								if(event.data.data.kountResponse.status === "review")
-								{
-									window.document.getElementById("p1").innerHTML = "";
-									window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
-									return;
-								}
-							}
-						}
-						catch(e)
-						{
-							window.document.getElementById("p1").innerHTML = "";
-							var jsonStr = JSON.stringify(event.data.data, null, 1);
-							window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
-							return;
-						}
 							
-						window.document.getElementById("p1").innerHTML = "";
 						var jsonStr = JSON.stringify(event.data.data, null, 1);
 						window.document.getElementById("cms_payment_form").innerHTML = "<p>Your transaction has been completed</p><p>You will be direct to order received page soon... or click below button to avoiding waiting</p><a href=\"'.$this->get_return_url( $order ).'\"><input type=\"button\" value=\"Continue\"/></a>";
 						setTimeout(function () {
@@ -725,8 +698,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 						document.getElementById("loader").style.display = "none";
 						var msg = event.data.data.message;
 						
-						window.document.getElementById("p1").innerHTML = "";
-						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction Declined</p><p>please click Back to Checkout button to try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
+						window.document.getElementById("cms_payment_form").innerHTML = "<p>Transaction was declined</p><p>please try again.</p><a href=\"'.wc_get_checkout_url().'\"><input type=\"button\" value=\"Back to Checkout\"/></a>";
 						
 					}
 				}
@@ -734,11 +706,22 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		');
 
 		wp_enqueue_style( 'cms_orderpay' );	
+	
+		if(empty($GLOBALS['is_IE']))
+		{
+			return $testwarning.'<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+			<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+			</form>';
+		}
+		else
+		{
+			return $testwarning.'<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+			<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
+			<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
+			</form>';
+		}
 
-		return $testwarning.'<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
-		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
-		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
-		</form>';
+		
 
 	}
 		
@@ -803,6 +786,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			'hideCvc' => ($this->hidecvc === 'yes'?true:false),
 			'requireCvc' => ($this->requirecvc === 'yes'?true:false),
 			'hideBilling' => ($this->hidebilling === 'yes'?true:false),
+			'displaySubmitButton' =>(!empty($GLOBALS['is_IE'])?true:false),
 		);
 		
 		if(!empty($this->customtext_url))

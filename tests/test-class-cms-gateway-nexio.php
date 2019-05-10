@@ -415,8 +415,10 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->api_url = 'https://api.nexiopay.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
 
+        $mockedObject->$GLOBALS['is_IE'] = '';
+
         $return = $mockedObject->generate_nexio_form($order_id);
-        $return2 = '<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+        $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
 		</form>';
@@ -469,9 +471,9 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         $mockedObject->api_url = 'https://api.nexiopaysandbox.com/';
         $onetimetoken = $mockedObject->get_iframe_src('123456');
         
-
+        $mockedObject->$GLOBALS['is_IE'] = '';
         $return = $mockedObject->generate_nexio_form($order_id);
-        $return2 = '<p id="p1">Please enter your payment information in the form below.</p><form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
+        $return2 = '<form id="cms_payment_form" action="'.esc_url( $onetimetoken ).'" method="post">
 		<iframe type="iframe" class="cms_iframe" id="iframe1" src="'.$onetimetoken.'"></iframe><div id="loader"></div>
 		<input type="submit" class="button" id="submit_cms_payment_form" value="'.__('Pay Now', 'cms-gateway-nexio').'" />
 		</form>';
