@@ -400,7 +400,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
 			
-			$ch = curl_init($this->api_url.'webhook/v3/updateMerchantWebhookSecret');
+			$ch = curl_init($this->api_url.'webhook/v3/secret');
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -451,7 +451,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			
 			$basicauth = "Basic ". base64_encode($this->user_name . ":" . $this->password);
 			
-			$ch = curl_init($this->api_url.'webhook/v3/merchantWebhookSecret/'.$this->merchant_id);
+			$ch = curl_init($this->api_url.'webhook/v3/secret/'.$this->merchant_id);
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
 			
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
