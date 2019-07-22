@@ -1,4 +1,4 @@
-# cms-gateway-nexio
+﻿# cms-gateway-nexio
 A Nexio WooCommerce plugin. Takes credit card payments directly on your Wordpress store using Nexio.
 
 ### Description
@@ -105,3 +105,4 @@ Example:
 * 0.0.13 - 2019-05-09
 * 0.0.14 - 2019-05-10
 * 0.0.15 - 2019-05-30
+* 0.0.16 - 2019-07-22

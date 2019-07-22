@@ -415,7 +415,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			if ($error) {
 				return "error";
 			} else {
-				if(json_decode($result)->error)
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->secret))
 				{
 					
 					return "error";
@@ -467,7 +467,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				
 				return "error";
 			} else {
-				if(json_decode($result)->error)
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->secret))
 				{
 					
 					return "error";
@@ -832,7 +832,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_callback_url()
 	{
-		$callbackurl = get_site_url(null,null,'https').'/wc-api/'.strtolower( get_class( $this ) );
+		$callbackurl = get_site_url(null,null,'https').'/?wc-api='.strtolower( get_class( $this ) );
 		
 		return $callbackurl;
 	}
@@ -846,7 +846,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_failure_callback_url()
 	{
-		$callbackurl = get_site_url(null,null,'https').'/wc-api/CALLBACK/';
+		$callbackurl = get_site_url(null,null,'https').'/?wc-api=CALLBACK';
 		
 		
 		return $callbackurl;
@@ -884,7 +884,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			} else {
 				
 				$onetimetoken = json_decode($result)->token;
-				if(json_decode($result)->error || empty(json_decode($result)->token))
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->token))
 				{
 					
 					return "error";
