@@ -883,16 +883,17 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return "error";
 			} else {
 				
-				$onetimetoken = json_decode($result)->token;
 				if(!empty(json_decode($result)->error) || empty(json_decode($result)->token))
 				{
 					
 					return "error";
 				}
+
+				$onetimetoken = json_decode($result)->token;
 				$this->token = $onetimetoken;
 				
 				error_log("Get One Time Token:".$onetimetoken,0);
-				return json_decode($result)->token;
+				return $onetimetoken;
 			}
 		} catch (Exception $e) {
 			error_log("Get One Time Token:".$e->getMessage(),0);
