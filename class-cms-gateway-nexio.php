@@ -883,12 +883,20 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return "error";
 			} else {
 				
+<<<<<<< Updated upstream
 				if(!empty(json_decode($result)->error) || empty(json_decode($result)->token))
+=======
+				
+				if(json_decode($result)->error || empty(json_decode($result)->token))
+>>>>>>> Stashed changes
 				{
 					
 					return "error";
 				}
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 				$onetimetoken = json_decode($result)->token;
 				$this->token = $onetimetoken;
 				
