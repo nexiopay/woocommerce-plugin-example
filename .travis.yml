@@ -9,7 +9,10 @@ language: php
 sudo: false
 
 #dist trusty, test fail on xenial, need find root cause
-dist: trusty
+#dist: trusty
+
+services:
+  - mysql
 
 # Test main supported versions of PHP against latest WP.
 php:
