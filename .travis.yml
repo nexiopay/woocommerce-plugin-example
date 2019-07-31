@@ -8,6 +8,12 @@ language: php
 
 sudo: false
 
+#dist trusty, test fail on xenial, need find root cause
+#dist: trusty
+
+services:
+  - mysql
+
 # Test main supported versions of PHP against latest WP.
 php:
   - 5.6
@@ -47,7 +53,7 @@ env:
 before_script:
   - |
   - export PATH="$HOME/.config/composer/vendor/bin:$PATH"
-  - bash tests/bin/install.sh woocommerce_test root '' localhost $WP_VERSION
+  - bash tests/bin/install.sh woocommerce_test root '' 127.0.0.1 $WP_VERSION
   - bash tests/bin/travis.sh before
 
 script:

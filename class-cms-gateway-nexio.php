@@ -126,6 +126,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->description                 = $this->get_option( 'description' );
 		$this->enabled                     = $this->get_option( 'enabled' );
 		$this->api_url		= $this->get_option('api_url');
+
+		//judge api_url format, if it's not end with slash, add a slash at the end of the string
+		if(substr($this->api_url,strlen($this->api_url) - 1,1) !== '/')
+		{
+			$this->api_url = $this->api_url.'/';
+		}
+
 		$this->user_name	= $this->get_option('user_name');
 		$this->password	= $this->get_option('password');
 		$this->merchant_id = $this->get_option('merchant_id');
@@ -415,7 +422,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 			if ($error) {
 				return "error";
 			} else {
-				if(json_decode($result)->error)
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->secret))
 				{
 					
 					return "error";
@@ -467,7 +474,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				
 				return "error";
 			} else {
-				if(json_decode($result)->error)
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->secret))
 				{
 					
 					return "error";
@@ -832,7 +839,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_callback_url()
 	{
-		$callbackurl = get_site_url(null,null,'https').'/wc-api/'.strtolower( get_class( $this ) );
+		$callbackurl = get_site_url(null,null,'https').'/?wc-api='.strtolower( get_class( $this ) );
 		
 		return $callbackurl;
 	}
@@ -846,7 +853,7 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 	 */
 	public function get_failure_callback_url()
 	{
-		$callbackurl = get_site_url(null,null,'https').'/wc-api/CALLBACK/';
+		$callbackurl = get_site_url(null,null,'https').'/?wc-api=CALLBACK';
 		
 		
 		return $callbackurl;
@@ -883,16 +890,16 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 				return "error";
 			} else {
 				
-				$onetimetoken = json_decode($result)->token;
-				if(json_decode($result)->error || empty(json_decode($result)->token))
+				if(!empty(json_decode($result)->error) || empty(json_decode($result)->token))
 				{
 					
 					return "error";
 				}
+				$onetimetoken = json_decode($result)->token;
 				$this->token = $onetimetoken;
 				
 				error_log("Get One Time Token:".$onetimetoken,0);
-				return json_decode($result)->token;
+				return $onetimetoken;
 			}
 		} catch (Exception $e) {
 			error_log("Get One Time Token:".$e->getMessage(),0);

@@ -378,7 +378,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
         
         $return = $this->nexio_class->get_failure_callback_url();
 
-        $this->assertEquals(get_site_url(null,null,'https').'/wc-api/CALLBACK/',$return);
+        $this->assertEquals(get_site_url(null,null,'https').'/?wc-api=CALLBACK',$return);
     }
 
     /*
@@ -388,7 +388,7 @@ class TestClassCMSGatewayNexio extends WC_Unit_Test_Case{
     public function test_get_callback_url()
 	{
         $return = $this->nexio_class->get_callback_url();
-        $this->assertEquals(get_site_url(null,null,'https').'/wc-api/'.strtolower( get_class( $this->nexio_class ) ),$return);
+        $this->assertEquals(get_site_url(null,null,'https').'/?wc-api='.strtolower( get_class( $this->nexio_class ) ),$return);
 	}
 
     /*
