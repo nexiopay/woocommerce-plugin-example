@@ -126,6 +126,13 @@ class CMS_Gateway_Nexio extends WC_Payment_Gateway_CC {
 		$this->description                 = $this->get_option( 'description' );
 		$this->enabled                     = $this->get_option( 'enabled' );
 		$this->api_url		= $this->get_option('api_url');
+
+		//judge api_url format, if it's not end with slash, add a slash at the end of the string
+		if(substr($this->api_url,strlen($this->api_url) - 1,1) !== '/')
+		{
+			$this->api_url = $this->api_url.'/';
+		}
+
 		$this->user_name	= $this->get_option('user_name');
 		$this->password	= $this->get_option('password');
 		$this->merchant_id = $this->get_option('merchant_id');
