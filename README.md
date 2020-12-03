@@ -1,5 +1,5 @@
 ﻿**Deprecation Warning:**
-This repository is no longer active.
+This repository is no longer active or supported.
 Please contact [Nexio integration support](nexiointegrations.slack.com)
 if you would like to integrate with WooCommerce through [Nexio](nexiohub.com).
 
