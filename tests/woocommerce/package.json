@@ -54,7 +54,7 @@
     "istanbul": "1.0.0-alpha.2",
     "lint-staged": "8.1.5",
     "mocha": "6.0.2",
-    "node-sass": "4.11.0",
+    "node-sass": ">=4.13.1",
     "prettier": "github:automattic/calypso-prettier#c56b4251",
     "stylelint": "9.10.1",
     "stylelint-config-wordpress": "13.1.0",
